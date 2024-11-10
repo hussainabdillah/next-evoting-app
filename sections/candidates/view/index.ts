@@ -1,0 +1,1 @@
+export { default as CandidatesViewPage } from './candidates-view-page';

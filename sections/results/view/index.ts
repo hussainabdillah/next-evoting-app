@@ -1,0 +1,1 @@
+export { default as ResultsViewPage } from './results-view-page';

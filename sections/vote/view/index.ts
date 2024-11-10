@@ -1,0 +1,1 @@
+export { default as VoteViewPage } from './vote-view-page';
