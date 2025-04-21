@@ -1,7 +1,7 @@
 import { VoteViewPage } from '@/sections/vote/view';
 
 export const metadata = {
-  title: 'Dashboard : Vote'
+  title: 'Vote'
 };
 
 export default function page() {
