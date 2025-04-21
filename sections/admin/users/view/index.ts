@@ -1,0 +1,1 @@
+export { default as UsersPageView } from './users';

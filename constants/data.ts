@@ -121,7 +121,7 @@ export type Product = {
   updated_at: string;
 };
 
-export const navItems: NavItem[] = [
+export const userNavItems: NavItem[] = [
   {
     title: 'Dashboard',
     href: '/dashboard',
@@ -140,22 +140,37 @@ export const navItems: NavItem[] = [
     icon: 'post',
     label: 'vote'
   },
+  // {
+  //   title: 'Results',
+  //   href: '/dashboard/results',
+  //   icon: 'result',
+  //   label: 'results'
+  // },
+  // {
+  //   title: 'Help',
+  //   href: '/dashboard/help',
+  //   icon: 'help',
+  //   label: 'help'
+  // }
+];
+
+export const adminNavItems: NavItem[] = [
   {
-    title: 'Results',
-    href: '/dashboard/results',
-    icon: 'result',
-    label: 'results'
+    title: 'Dashboard',
+    href: '/admin',
+    icon: 'dashboard',
+    label: 'Dashboard'
   },
   {
-    title: 'Help',
-    href: '/dashboard/help',
-    icon: 'help',
-    label: 'help'
+    title: 'Election',
+    href: '/admin/election',
+    icon: 'post',
+    label: 'election'
   },
   {
-    title: 'Login',
-    href: '/',
-    icon: 'login',
-    label: 'login'
+    title: 'Users',
+    href: '/admin/users',
+    icon: 'user',
+    label: 'users'
   }
 ];
