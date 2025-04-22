@@ -172,5 +172,11 @@ export const adminNavItems: NavItem[] = [
     href: '/admin/users',
     icon: 'user',
     label: 'users'
+  },
+  {
+    title: 'Smart Contract',
+    href: '/admin/smartcontract',
+    icon: 'kanban',
+    label: 'smart contract'
   }
 ];

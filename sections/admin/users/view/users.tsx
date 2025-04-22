@@ -21,7 +21,7 @@ type User = {
   role: 'Admin' | 'Voter'
 }
 
-export default function AdminUsers() {
+export default function UsersManagementPage() {
   const [users, setUsers] = useState<User[]>([
     { id: 1, name: "Admin User", email: "admin@example.com", role: "Admin" },
     { id: 2, name: "John Doe", email: "john@example.com", role: "Voter" },
@@ -44,7 +44,8 @@ export default function AdminUsers() {
   return (
     <PageContainer scrollable={true}>
       <main className="flex-1 p-8 overflow-auto">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6">Users Management</h1>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-2xl font-bold">Manage Users</CardTitle>

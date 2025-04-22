@@ -1,0 +1,1 @@
+export { default as ElectionManagementPageView } from './election';
