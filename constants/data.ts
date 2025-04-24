@@ -168,6 +168,18 @@ export const adminNavItems: NavItem[] = [
     label: 'election'
   },
   {
+    title: 'Candidates',
+    href: '/admin/candidates',
+    icon: 'user2',
+    label: 'users'
+  },
+  {
+    title: 'Results',
+    href: '/admin/results',
+    icon: 'result',
+    label: 'results'
+  },
+  {
     title: 'Users',
     href: '/admin/users',
     icon: 'user',
