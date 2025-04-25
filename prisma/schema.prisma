@@ -54,3 +54,11 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+
+model Candidate {
+  id     Int    @id @default(autoincrement())
+  name   String
+  party  String
+  image  String
+  bio    String
+}

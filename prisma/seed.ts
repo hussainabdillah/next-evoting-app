@@ -1,9 +1,8 @@
-// prisma/seed.ts
-import { prisma } from '../lib/prisma'
+import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt'
 
-async function main() {
-  const hashedPassword = await bcrypt.hash('admin123', 10)
+async function seedAdmin() {
+  const hashedPassword = await bcrypt.hash('admin123', 10);
 
   await prisma.user.upsert({
     where: { email: 'admin@example.com' },
@@ -14,15 +13,46 @@ async function main() {
       password: hashedPassword,
       role: 'admin',
     },
-  })
+  });
+
+  console.log('✅ Admin user seeded');
+}
+
+async function seedCandidates() {
+  await prisma.candidate.createMany({
+    data: [
+      {
+        "name": "Rizky Pratama",
+        "party": "Bidang Keilmuan dan Penelitian",
+        "image": "/placeholder.svg",
+        "bio": "Rizky Pratama adalah mahasiswa Informatika yang aktif dalam penelitian kecerdasan buatan dan pengembangan teknologi terbaru."
+      },
+      {
+        "name": "Siti Nurhaliza",
+        "party": "Bidang Kemahasiswaan",
+        "image": "/placeholder.svg",
+        "bio": "Siti Nurhaliza adalah mahasiswa Informatika yang peduli pada pengembangan soft skill dan kesejahteraan mahasiswa di kampus."
+      },
+      {
+        "name": "Andi Wijaya",
+        "party": "Bidang Minat dan Bakat",
+        "image": "/placeholder.svg",
+        "bio": "Andi Wijaya adalah mahasiswa Informatika yang aktif dalam komunitas programming dan hobi mengembangkan game serta aplikasi mobile."
+      }
+    ]
+  });
+
+  console.log('✅ Candidates seeded');
+}
+
+async function main() {
+  await seedAdmin();
+  await seedCandidates();
 }
 
 main()
-  .then(() => {
-    console.log('✅ Admin user created')
-    return prisma.$disconnect()
-  })
+  .then(() => prisma.$disconnect())
   .catch((e) => {
-    console.error(e)
-    return prisma.$disconnect().finally(() => process.exit(1))
-  })
+    console.error(e);
+    prisma.$disconnect().finally(() => process.exit(1));
+  });
