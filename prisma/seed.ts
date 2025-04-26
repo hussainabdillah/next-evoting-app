@@ -24,19 +24,19 @@ async function seedCandidates() {
       {
         "name": "Rizky Pratama",
         "party": "Bidang Keilmuan dan Penelitian",
-        "image": "/placeholder.svg",
+        "image": "https://avatar.iran.liara.run/public/5",
         "bio": "Rizky Pratama adalah mahasiswa Informatika yang aktif dalam penelitian kecerdasan buatan dan pengembangan teknologi terbaru."
       },
       {
         "name": "Siti Nurhaliza",
         "party": "Bidang Kemahasiswaan",
-        "image": "/placeholder.svg",
+        "image": "https://avatar.iran.liara.run/public/6",
         "bio": "Siti Nurhaliza adalah mahasiswa Informatika yang peduli pada pengembangan soft skill dan kesejahteraan mahasiswa di kampus."
       },
       {
         "name": "Andi Wijaya",
         "party": "Bidang Minat dan Bakat",
-        "image": "/placeholder.svg",
+        "image": "https://avatar.iran.liara.run/public/9",
         "bio": "Andi Wijaya adalah mahasiswa Informatika yang aktif dalam komunitas programming dan hobi mengembangkan game serta aplikasi mobile."
       }
     ]
