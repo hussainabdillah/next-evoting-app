@@ -140,7 +140,7 @@ export default function CandidatesManagementPage() {
           </div>
           <Card>
             <CardHeader>
-              <CardTitle>Candidate List</CardTitle>
+              <CardTitle>Candidates List</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>

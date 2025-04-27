@@ -24,6 +24,8 @@ model User {
   updatedAt      DateTime @updatedAt
   accounts       Account[]
   sessions       Session[]
+  walletAddress  String?
+  status         String   @default("Not Verified")
 }
 
 model Account {

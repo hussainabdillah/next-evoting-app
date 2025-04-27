@@ -45,7 +45,7 @@ export default function ElectionResultsPage() {
   return (
     <PageContainer scrollable={true}>
       <main className="flex-1 p-8 overflow-auto">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold mb-6">Election Results</h1>
 
           <Card>

@@ -1,7 +1,7 @@
 import { ElectionResultsPage } from '@/sections/admin/results/view';
 
 export const metadata = {
-  title: 'Admin : Manage Election'
+  title: 'Admin : Results'
 };
 
 export default function page() {
