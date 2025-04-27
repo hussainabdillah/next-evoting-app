@@ -109,17 +109,44 @@ export default function CandidatesManagementPage() {
   };
 
   const handleAddCandidate = async () => {
-    const res = await fetch('/api/candidates', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newCandidate)
-    });
-    if (res.ok) {
-      toast({ title: 'Candidate Added' });
-      setNewCandidate({ id:Date.now(), name: '', party: '', image: '', bio: '', votes:0 });
-      fetchCandidates();
+    if (!newCandidate.name || !newCandidate.party || !newCandidate.bio) {
+      toast({
+        title: "Validation Error",
+        description: "Name, Party, and Bio fields are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    try {
+      const res = await fetch('/api/candidates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCandidate),
+      });
+  
+      if (res.ok) {
+        setIsAddDialogOpen(false)
+        toast({ title: "Candidate Added", description: "New candidate has been successfully added." })
+        setNewCandidate({ id: Date.now(), name: '', party: '', image: '', bio: '', votes: 0 });
+        fetchCandidates();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to add candidate.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Something went wrong.",
+        variant: "destructive",
+      });
     }
   };
+  
   
 
   return (
@@ -354,8 +381,6 @@ export default function CandidatesManagementPage() {
                     // setCandidates(prev => [...prev, candidateToAdd])
                     // setNewCandidate({ id: Date.now(), name: '', party: '', image: '', bio: '', votes: 0 })
                     await handleAddCandidate()
-                    setIsAddDialogOpen(false)
-                    toast({ title: "Candidate Added", description: "New candidate has been successfully added." })
                   }}
                 >
                   Add
