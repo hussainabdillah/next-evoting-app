@@ -1,17 +1,19 @@
 'use client';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { navItems } from '@/constants/data';
+// import { navItems } from '@/constants/data';
 import { MenuIcon } from 'lucide-react';
 import { useState } from 'react';
+import { NavItem } from '@/types';
 
 // import { Playlist } from "../data/playlists";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
+  items: NavItem[]; 
   // playlists: Playlist[];
 }
 
-export function MobileSidebar({ className }: SidebarProps) {
+export function MobileSidebar({ className, items }: SidebarProps) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -27,7 +29,7 @@ export function MobileSidebar({ className }: SidebarProps) {
               </h2>
               <div className="space-y-1">
                 <DashboardNav
-                  items={navItems}
+                  items={items}
                   isMobileNav={true}
                   setOpen={setOpen}
                 />

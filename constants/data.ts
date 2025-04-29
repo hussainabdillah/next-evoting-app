@@ -121,7 +121,7 @@ export type Product = {
   updated_at: string;
 };
 
-export const navItems: NavItem[] = [
+export const userNavItems: NavItem[] = [
   {
     title: 'Dashboard',
     href: '/dashboard',
@@ -140,22 +140,55 @@ export const navItems: NavItem[] = [
     icon: 'post',
     label: 'vote'
   },
+  // {
+  //   title: 'Results',
+  //   href: '/dashboard/results',
+  //   icon: 'result',
+  //   label: 'results'
+  // },
+  // {
+  //   title: 'Help',
+  //   href: '/dashboard/help',
+  //   icon: 'help',
+  //   label: 'help'
+  // }
+];
+
+export const adminNavItems: NavItem[] = [
+  {
+    title: 'Dashboard',
+    href: '/admin',
+    icon: 'dashboard',
+    label: 'Dashboard'
+  },
+  {
+    title: 'Election',
+    href: '/admin/election',
+    icon: 'post',
+    label: 'election'
+  },
+  {
+    title: 'Candidates',
+    href: '/admin/candidates',
+    icon: 'user2',
+    label: 'users'
+  },
   {
     title: 'Results',
-    href: '/dashboard/results',
+    href: '/admin/results',
     icon: 'result',
     label: 'results'
   },
   {
-    title: 'Help',
-    href: '/dashboard/help',
-    icon: 'help',
-    label: 'help'
+    title: 'Users',
+    href: '/admin/users',
+    icon: 'user',
+    label: 'users'
   },
   {
-    title: 'Login',
-    href: '/',
-    icon: 'login',
-    label: 'login'
+    title: 'Smart Contract',
+    href: '/admin/smartcontract',
+    icon: 'kanban',
+    label: 'smart contract'
   }
 ];
