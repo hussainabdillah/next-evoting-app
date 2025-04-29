@@ -1,69 +1,193 @@
+"use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
+import * as React from "react"
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import { DateRange } from "react-day-picker"
+
+import { cn } from "@/lib/utils"
+import { toast } from "@/components/ui/use-toast"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+import { Switch } from "@/components/ui/switch"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover"
+import PageContainer from "@/components/layout/page-container"
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog"
+
+
+const FormSchema = z.object({
+  isElectionActive: z.boolean(),
+  schedule: z.object({
+    from: z.date({ required_error: "Start date is required" }),
+    to: z.date({ required_error: "End date is required" }),
+  }),
+})
 
 export default function ElectionManagementPage() {
-  const isElectionActive = true // ini nanti bisa pakai fetch dari DB atau context
-  const totalVoters = 150
-  const totalVotes = 87
-  const participation = Math.round((totalVotes / totalVoters) * 100)
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      isElectionActive: true,
+      schedule: {
+        from: new Date(),
+        to: new Date(new Date().setDate(new Date().getDate() + 7)),
+      },
+    },
+  })
+
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+
+
+  const onSubmit = (data: z.infer<typeof FormSchema>) => {
+    toast({
+      title: "Election settings applied",
+      description: "Election settings have been updated successfully.",
+      // description: (
+      //   <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+      //     <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+      //   </pre>
+      // ),
+    })
+  }
 
   return (
-    <div className="p-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Election Status</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-between">
-          <div>
-            <Label>{isElectionActive ? "Active" : "Inactive"}</Label>
-          </div>
-          <Switch checked={isElectionActive} />
-        </CardContent>
-      </Card>
+    <PageContainer scrollable={true}>
+      <main className="flex-1 p-8 overflow-auto">
+        <div className="max-w-3xl mx-auto space-y-6">
+          <h1 className="text-3xl font-bold mb-6">Manage Election</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Election Schedule</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>Start Time</Label>
-            <input type="datetime-local" className="w-full border rounded p-2 mt-1" />
-          </div>
-          <div>
-            <Label>End Time</Label>
-            <input type="datetime-local" className="w-full border rounded p-2 mt-1" />
-          </div>
-        </CardContent>
-      </Card>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6"
+            >
+              {/* Election Status */}
+              <FormField
+                control={form.control}
+                name="isElectionActive"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Election Status</FormLabel>
+                      <FormDescription>
+                        Enable or disable the election process.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Participation Stats</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-between text-sm mb-2">
-            <span>{totalVotes} / {totalVoters} votes</span>
-            <span>{participation}%</span>
-          </div>
-          <Progress value={participation} />
-        </CardContent>
-      </Card>
+              {/* Election Schedule */}
+              <FormField
+                control={form.control}
+                name="schedule"
+                render={({ field }) => (
+                  <FormItem className="rounded-lg border p-4">
+                    <FormLabel className="text-base mb-2 block">Election Schedule</FormLabel>
+                    <FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value?.from ? (
+                              field.value.to ? (
+                                <>
+                                  {format(field.value.from, "LLL dd, y")} -{" "}
+                                  {format(field.value.to, "LLL dd, y")}
+                                </>
+                              ) : (
+                                format(field.value.from, "LLL dd, y")
+                              )
+                            ) : (
+                              <span>Pick a date range</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            initialFocus
+                            mode="range"
+                            defaultMonth={field.value?.from}
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            numberOfMonths={2}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-4">
-          <Button variant="outline">Reset Election</Button>
-          <Button variant="outline">Notify Voters</Button>
-          <Button>Export Results</Button>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="flex justify-end">
+                <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button">Apply Changes</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Apply Election Settings?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will update the election status and schedule. Are you sure?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={form.handleSubmit((data) => {
+                          onSubmit(data)
+                          setIsDialogOpen(false)
+                        })}
+                      >
+                        Confirm
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </main>
+    </PageContainer>
   )
 }

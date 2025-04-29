@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import PageContainer from '@/components/layout/page-container';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,19 +16,41 @@ type Candidate = {
   party: string
   votes: number
   image: string
+  bio: string
 }
 
 export default function VoteVIewPage() {
-  const [candidates, setCandidates] = useState<Candidate[]>([
-    { id: 1, name: "Alice Johnson", party: "Progressive Party", votes: 0, image: "/placeholder.svg?height=400&width=300" },
-    { id: 2, name: "Bob Smith", party: "Conservative Party", votes: 0, image: "/placeholder.svg?height=400&width=300" },
-    { id: 3, name: "Carol Williams", party: "Green Party", votes: 0, image: "/placeholder.svg?height=400&width=300" },
-    { id: 4, name: "David Brown", party: "Liberal Party", votes: 0, image: "/placeholder.svg?height=400&width=300" },
-    { id: 5, name: "Eve Davis", party: "Independent", votes: 0, image: "/placeholder.svg?height=400&width=300" },
-  ])
+  // const [candidates, setCandidates] = useState<Candidate[]>([
+  //   { id: 1, name: "Alice Johnson", party: "Progressive Party", votes: 0, image: "/placeholder.svg?height=400&width=300" },
+  //   { id: 2, name: "Bob Smith", party: "Conservative Party", votes: 0, image: "/placeholder.svg?height=400&width=300" },
+  //   { id: 3, name: "Carol Williams", party: "Green Party", votes: 0, image: "/placeholder.svg?height=400&width=300" },
+  //   // { id: 4, name: "David Brown", party: "Liberal Party", votes: 0, image: "/placeholder.svg?height=400&width=300" },
+  //   // { id: 5, name: "Eve Davis", party: "Independent", votes: 0, image: "/placeholder.svg?height=400&width=300" },
+  // ])
+  const [candidates, setCandidates] = useState<Candidate[]>([])
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [hasVoted, setHasVoted] = useState(false)
+
+  // handl fetch data candidates
+    useEffect(() => {
+      const fetchCandidates = async () => {
+        try {
+          const res = await fetch('/api/candidates');
+          if (!res.ok) {
+            console.error('Failed to fetch candidates:', res.statusText);
+            return;
+          }
+  
+          const data = await res.json();
+          console.log('Data fetched:', data);
+          setCandidates(data);
+        } catch (error) {
+          console.error('Error fetching candidates:', error);
+        }
+      };
+      fetchCandidates()
+    }, [])
 
   const handleVote = (candidate: Candidate) => {
     setSelectedCandidate(candidate)
@@ -63,7 +85,7 @@ export default function VoteVIewPage() {
               <CardDescription>Select a candidate to cast your vote</CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[600px] pr-4">
+              {/* <ScrollArea className="h-[600px] pr-4"> */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {candidates.map((candidate) => (
                     <Card key={candidate.id} className="overflow-hidden">
@@ -86,7 +108,7 @@ export default function VoteVIewPage() {
                     </Card>
                   ))}
                 </div>
-              </ScrollArea>
+              {/* </ScrollArea> */}
             </CardContent>
           </Card>
         ) : (

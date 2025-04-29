@@ -147,8 +147,6 @@ export default function CandidatesManagementPage() {
     }
   };
   
-  
-
   return (
     <PageContainer scrollable={true}>
       <main className="flex-1 p-8 overflow-auto">
