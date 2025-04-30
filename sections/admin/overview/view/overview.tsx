@@ -81,6 +81,18 @@ export default function OverViewPage() {
                 {/* <p className="text-xs text-muted-foreground">All systems operational</p> */}
               </CardContent>
             </Card>
+            {/* <Card>
+            <CardHeader>
+              <CardTitle>Participation Stats</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between text-sm mb-2">
+                <span>{totalVotes} / {totalVoters} votes</span>
+                <span>{participation}%</span>
+              </div>
+              <Progress value={participation} />
+            </CardContent>
+          </Card> */}
           </div>
         </div>
       </main>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import PageContainer from "@/components/layout/page-container"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,37 +8,51 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress"
 
 type Candidate = {
-  id: number
-  name: string
-  party: string
-  image: string
-  votes: number
+  id: number;
+  name: string;
+  party: string;
+  image: string;
+  bio: string;
+  votes: number;
 }
 
 export default function ElectionResultsPage() {
-  const [candidates] = useState<Candidate[]>([
-    {
-      id: 1,
-      name: "Alice Johnson",
-      party: "Progressive Party",
-      image: "/placeholder.svg?height=400&width=300",
-      votes: 1234
-    },
-    {
-      id: 2,
-      name: "Bob Smith",
-      party: "Conservative Party",
-      image: "/placeholder.svg?height=400&width=300",
-      votes: 1111
-    },
-    {
-      id: 3,
-      name: "Clara Davis",
-      party: "Green Party",
-      image: "/placeholder.svg?height=400&width=300",
-      votes: 789
-    }
-  ])
+  // const [candidates] = useState<Candidate[]>([
+  //   {
+  //     id: 1,
+  //     name: "Alice Johnson",
+  //     party: "Progressive Party",
+  //     image: "/placeholder.svg?height=400&width=300",
+  //     votes: 1234
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Bob Smith",
+  //     party: "Conservative Party",
+  //     image: "/placeholder.svg?height=400&width=300",
+  //     votes: 1111
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Clara Davis",
+  //     party: "Green Party",
+  //     image: "/placeholder.svg?height=400&width=300",
+  //     votes: 789
+  //   }
+  // ])
+  
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+
+  // Fetch candidates from API
+    useEffect(() => {
+      fetchCandidates();
+    }, []);
+  
+    const fetchCandidates = async () => {
+      const res = await fetch('/api/candidates');
+      const data = await res.json();
+      setCandidates(data);
+    };
 
   const totalVotes = candidates.reduce((sum, c) => sum + c.votes, 0)
 
@@ -59,7 +73,7 @@ export default function ElectionResultsPage() {
                     <TableHead>Image</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Party</TableHead>
-                    <TableHead>Votes</TableHead>
+                    {/* <TableHead>Votes</TableHead> */}
                     <TableHead>Percentage</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -81,7 +95,7 @@ export default function ElectionResultsPage() {
                         </TableCell>
                         <TableCell>{candidate.name}</TableCell>
                         <TableCell>{candidate.party}</TableCell>
-                        <TableCell>{candidate.votes.toLocaleString()}</TableCell>
+                        {/* <TableCell>{candidate.votes.toLocaleString()}</TableCell> */}
                         <TableCell className="w-1/4">
                           <div className="flex flex-col gap-1">
                             <Progress value={parseFloat(percentage)} />
