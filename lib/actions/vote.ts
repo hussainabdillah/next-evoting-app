@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import { getVotingContract } from "@/utils/getContract";
 
-export const vote = async (candidateId: number): Promise<void> => {
+export const vote = async (candidateId: number): Promise<ethers.TransactionResponse> => {
   if (!window.ethereum) {
     throw new Error("MetaMask is not installed");
   }
@@ -19,4 +19,5 @@ export const vote = async (candidateId: number): Promise<void> => {
   // Kirim vote ke blockchain
   const tx = await contract.vote(candidateId);
   await tx.wait(); // Tunggu konfirmasi transaksi
+  return tx;
 };

@@ -6,7 +6,7 @@ import PageContainer from '@/components/layout/page-container';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ChevronRight, BarChart, Home, Users, HelpCircle, Settings, CheckCircle, Copy, Download, Share2 } from 'lucide-react'
+import { ChevronRight, BarChart, Home, Users, HelpCircle, Settings, CheckCircle, Copy, Download, Share2, View } from 'lucide-react'
 import Link from 'next/link'    
 import Image from 'next/image'
 import { vote } from "@/lib/actions/vote";
@@ -28,9 +28,12 @@ export default function VoteVIewPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [transactionId, setTransactionId] = useState<string>('')
   const [hasVoted, setHasVoted] = useState(false)
   const [confirmationCode, setConfirmationCode] = useState('')
   const [timestamp, setTimestamp] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
   
   useEffect(() => {
     // Generate a random confirmation code
@@ -49,7 +52,7 @@ export default function VoteVIewPage() {
     setTimestamp(new Date().toLocaleString())
   }, [])
   
-  
+
   const copyConfirmationCode = () => {
     navigator.clipboard.writeText(confirmationCode)
     toast({
@@ -93,8 +96,11 @@ export default function VoteVIewPage() {
 
   const confirmVote = async () => {
     if (selectedCandidate) {
+      setShowConfirmation(false);
+      setIsLoading(true)  
       try {
-        await vote(selectedCandidate.id); // vote di blockchain
+        const tx = await vote(selectedCandidate.id); // vote returns transaction, vote di blockchain
+        setTransactionId(tx.hash); // save tx hash as transaction ID
         setCandidates(candidates.map(c => 
           c.id === selectedCandidate.id ? { ...c, votes: c.votes + 1 } : c
         ));
@@ -112,7 +118,7 @@ export default function VoteVIewPage() {
           variant: "destructive",
         });
       } finally {
-        setShowConfirmation(false);
+        setIsLoading(false)
       }
     }
   };
@@ -163,193 +169,90 @@ export default function VoteVIewPage() {
               {/* </ScrollArea> */}
             </CardContent>
           </Card>
-        ) : (
-          // <Card>
-          //   <CardHeader>
-          //     <CardTitle className="flex items-center">
-          //       <BarChart className="mr-2" />
-          //       Results
-          //     </CardTitle>
-          //     <CardDescription>Current vote distribution</CardDescription>
-          //   </CardHeader>
-          //   <CardContent>
-          //     {candidates.map((candidate) => (
-          //       <div key={candidate.id} className="mb-4 last:mb-0">
-          //         <div className="flex items-center mb-2">
-          //           <Image
-          //             src={candidate.image}
-          //             alt={candidate.name}
-          //             width={40}
-          //             height={40}
-          //             className="rounded-full mr-2"
-          //           />
-          //           <div>
-          //             <div className="text-sm font-medium">{candidate.name}</div>
-          //             <div className="text-xs text-muted-foreground">{candidate.party}</div>
-          //           </div>
-          //         </div>
-          //         <div className="mt-1 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-          //           <div
-          //             className="h-full bg-primary"
-          //             style={{
-          //               width: `${(candidate.votes / candidates.reduce((sum, c) => sum + c.votes, 0)) * 100}%`,
-          //             }}
-          //           />
-          //         </div>
-          //         <div className="mt-1 text-xs text-muted-foreground">{candidate.votes} votes</div>
-          //       </div>
-          //     ))}
-          //   </CardContent>
-          // </Card>
-          
-      // <main className="flex-1 p-8 overflow-auto flex items-center justify-center">
-      //   <div className="max-w-md w-full">
-      //     <Card className="border-green-200 shadow-lg">
-      //       <CardHeader className="text-center bg-green-50 rounded-t-lg border-b border-green-100">
-      //         <div className="mx-auto mb-4 bg-green-100 p-3 rounded-full inline-flex">
-      //           <CheckCircle className="h-12 w-12 text-green-600" />
-      //         </div>
-      //         <CardTitle className="text-2xl font-bold text-green-700">Vote Successfully Cast!</CardTitle>
-      //         <CardDescription>Your vote has been securely recorded</CardDescription>
-      //       </CardHeader>
-      //       <CardContent className="pt-6 space-y-6">
-      //         <Alert className="bg-green-50 border-green-200">
-      //           <CheckCircle className="h-4 w-4 text-green-600" />
-      //           <AlertTitle>Thank you for participating</AlertTitle>
-      //           <AlertDescription>
-      //             Your vote has been anonymously and securely recorded in our system.
-      //           </AlertDescription>
-      //         </Alert>
-              
-      //         <div className="space-y-4">
-      //           <div>
-      //             <h3 className="text-sm font-medium text-gray-500">Confirmation Code</h3>
-      //             <div className="mt-1 flex items-center">
-      //               <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono flex-1">
-      //                 {confirmationCode}
-      //               </code>
-      //               <Button 
-      //                 variant="ghost" 
-      //                 size="icon" 
-      //                 onClick={copyConfirmationCode}
-      //                 className="ml-2"
-      //               >
-      //                 <Copy className="h-4 w-4" />
-      //                 <span className="sr-only">Copy confirmation code</span>
-      //               </Button>
-      //             </div>
-      //           </div>
-                
-      //           <div>
-      //             <h3 className="text-sm font-medium text-gray-500">Timestamp</h3>
-      //             <p className="mt-1 text-sm">{timestamp}</p>
-      //           </div>
-                
-      //           <div>
-      //             <h3 className="text-sm font-medium text-gray-500">Election</h3>
-      //             <p className="mt-1 text-sm">2024 National Election</p>
-      //           </div>
-      //         </div>
-      //       </CardContent>
-      //       <CardFooter className="flex flex-col space-y-3">
-      //         <div className="grid grid-cols-2 gap-3 w-full">
-      //           <Button 
-      //             variant="outline" 
-      //             className="w-full" 
-      //             onClick={downloadReceipt}
-      //           >
-      //             <Download className="h-4 w-4 mr-2" />
-      //             Download Receipt
-      //           </Button>
-      //           <Button 
-      //             variant="outline" 
-      //             className="w-full"
-      //             onClick={() => {
-      //               toast({
-      //                 title: "Share Link Generated",
-      //                 description: "A link to verify your participation has been copied to clipboard.",
-      //               })
-      //             }}
-      //           >
-      //             <Share2 className="h-4 w-4 mr-2" />
-      //             Share Participation
-      //           </Button>
-      //         </div>
-      //         <Button asChild className="w-full">
-      //           <Link href="/">Return to Home</Link>
-      //         </Button>
-      //       </CardFooter>
-      //     </Card>
-          
-      //     <div className="mt-6 text-center text-sm text-gray-500">
-      //       <p>
-      //         Having issues? <Link href="/help" className="text-green-600 hover:underline">Contact support</Link>
-      //       </p>
-      //     </div>
-      //   </div>
-      // </main>
+        ) : (      
+      // receipt succes voting
       <div className="max-w-md mx-auto">
-            <Card className="border-green-200 shadow-lg">
-              <CardHeader className="text-center bg-green-50 rounded-t-lg border-b border-green-100">
-                <div className="mx-auto mb-4 bg-green-100 p-3 rounded-full inline-flex">
-                  <CheckCircle className="h-12 w-12 text-green-600" />
-                </div>
-                <CardTitle className="text-2xl font-bold text-green-700">Vote Successfully Cast!</CardTitle>
-                <CardDescription>Your vote has been securely recorded</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-6">
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertTitle>Thank you for participating</AlertTitle>
-                  <AlertDescription>
-                    Your vote has been anonymously and securely recorded in our system.
-                  </AlertDescription>
-                </Alert>
+        <Card className="border-green-200 dark:border-green-800 shadow-lg">
+          <CardHeader className="text-center bg-green-50 dark:bg-green-900 rounded-t-lg border-b border-green-100 dark:border-green-800">
+            <div className="mx-auto mb-4 bg-green-100 dark:bg-green-800 p-3 rounded-full inline-flex">
+              <CheckCircle className="h-12 w-12 text-green-600" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-green-700 dark:text-green-300">
+              Vote Successfully Cast!
+            </CardTitle>
+            <CardDescription className="text-green-600 dark:text-green-400">
+              Your vote has been securely recorded
+            </CardDescription>
+          </CardHeader>
 
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Confirmation Code</h3>
-                    <div className="mt-1 flex items-center">
-                      <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono flex-1">
-                        {confirmationCode}
-                      </code>
-                      <Button variant="ghost" size="icon" onClick={copyConfirmationCode} className="ml-2">
-                        <Copy className="h-4 w-4" />
-                        <span className="sr-only">Copy confirmation code</span>
-                      </Button>
-                    </div>
-                  </div>
+          <CardContent className="pt-6 space-y-6">
+            <Alert className="bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle className="dark:text-green-300">Thank you for participating</AlertTitle>
+              <AlertDescription className="dark:text-green-400">
+                Your vote has been anonymously and securely recorded in our system.
+              </AlertDescription>
+            </Alert>
 
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Timestamp</h3>
-                    <p className="mt-1 text-sm">{timestamp}</p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Election</h3>
-                    <p className="mt-1 text-sm">2024 National Election</p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col space-y-3">
-                <div className="grid grid-cols-2 gap-3 w-full">
-                  <Button variant="outline" className="w-full" onClick={downloadReceipt}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Receipt
-                  </Button>
-                  <Button variant="outline" className="w-full" onClick={() => {
-                    toast({
-                      title: "Share Link Generated",
-                      description: "A link to verify your participation has been copied to clipboard.",
-                    });
-                  }}>
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share Receipt
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-300">Transaction ID</h3>
+                <div className="mt-1 flex items-center">
+                  <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm font-mono flex-1 text-gray-800 dark:text-gray-100">
+                  {transactionId.slice(0, 6)}...{transactionId.slice(-4)}
+                  </code>
+                  <Button variant="ghost" size="icon" onClick={() => {
+                          navigator.clipboard.writeText(transactionId)
+                          toast({ title: "Copied", description: "Transaction ID copied." })
+                        }} 
+                      className="ml-2">
+                    <Copy className="h-4 w-4" />
+                    <span className="sr-only">Copy Transaction ID</span>
                   </Button>
                 </div>
-              </CardFooter>
-            </Card>
-          </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-300">Timestamp</h3>
+                <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{timestamp}</p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-300">Election</h3>
+                <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">2024 National Election</p>
+              </div>
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col space-y-3">
+            <div className="grid grid-cols-2 gap-3 w-full">
+            <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => window.open(`https://sepolia.etherscan.io/tx/${transactionId}`, '_blank')}
+              >
+                <View className="h-4 w-4 mr-2" />
+                View Detail
+            </Button>
+            <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  const url = `https://sepolia.etherscan.io/tx/${transactionId}`
+                  navigator.clipboard.writeText(url)
+                  toast({
+                    title: "Share Link Generated",
+                    description: "A link to verify your participation has been copied to clipboard.",
+                  })
+                }}
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Share Receipt
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
         )}
 
         <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
@@ -367,6 +270,16 @@ export default function VoteVIewPage() {
           </DialogContent>
         </Dialog>
         </div>
+        
+        {/* loading state */}
+        {isLoading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent border-white"></div>
+              <p className="text-white text-lg">Waiting for transaction confirmation...</p>
+            </div>
+          </div>
+        )}
       </main>
     </PageContainer>
   );
