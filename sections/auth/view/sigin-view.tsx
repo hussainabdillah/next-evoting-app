@@ -10,8 +10,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Mail, Lock } from 'lucide-react'
+import { Mail, Lock, Loader2 } from 'lucide-react'
 import { toast } from "@/components/ui/use-toast"
+import { Progress } from '@/components/ui/progress'
 
 export const metadata: Metadata = {
   title: 'Authentication',
@@ -27,35 +28,38 @@ export default function SignInViewPage() {
   const [signupEmail, setSignupEmail] = useState('')
   const [signupPassword, setSignupPassword] = useState('')
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const result = await signIn('credentials', {
-      redirect: false,
-      email: loginEmail,
-      password: loginPassword,
-    })
+    setIsLoading(true)
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: loginEmail,
+        password: loginPassword,
+      })
   
-    if (result?.ok) {
-      const res = await fetch('/api/auth/session')
-      const data = await res.json()
+      if (result?.ok) {
+        const res = await fetch('/api/auth/session')
+        const data = await res.json()
+        const role = data?.user?.role
   
-      const role = data?.user?.role
+        toast({ title: "Login Successful", description: "Welcome back!" })
   
-      toast({ title: "Login Successful", description: "Welcome back!" })
-  
-      if (role === 'admin') {
-        router.push('/admin')
+        router.push(role === 'admin' ? '/admin' : '/dashboard')
       } else {
-        router.push('/dashboard')
+        toast({ title: "Login Failed", description: "Invalid credentials", variant: "destructive" })
       }
-  
-    } else {
-      toast({ title: "Login Failed", description: "Invalid credentials", variant: "destructive" })
+    } catch (error) {
+      toast({ title: "Login Error", description: "Something went wrong", variant: "destructive" })
+    } finally {
+      setIsLoading(false)
     }
   }
   
-
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     if (signupPassword !== signupConfirmPassword) {
@@ -66,7 +70,8 @@ export default function SignInViewPage() {
       })
       return
     }
-
+  
+    setIsLoading(true)
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -77,9 +82,9 @@ export default function SignInViewPage() {
           password: signupPassword
         })
       })
-
+  
       const data = await res.json()
-
+  
       if (res.ok) {
         toast({
           title: "Signup Successful",
@@ -94,8 +99,11 @@ export default function SignInViewPage() {
         description: error.message,
         variant: "destructive",
       })
+    } finally {
+      setIsLoading(false)
     }
   }
+  
 
   return (
     <main className="flex-1 p-8 overflow-auto">
@@ -212,6 +220,11 @@ export default function SignInViewPage() {
           
         </Card>
       </div>
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Loader2 className="w-10 h-10 animate-spin text-white" />
+        </div>
+      )}
     </main>
   )
 }
