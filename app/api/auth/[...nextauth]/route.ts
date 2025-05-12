@@ -25,9 +25,9 @@ const handler = NextAuth({
 
         return {
           id: user.id,
-          name: user.name,
+          name: user.name as string,
           email: user.email,
-          role: user.role, // Menjaga role tetap ada
+          role: user.role as "admin" | "user",
         }
       },
     }),

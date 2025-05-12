@@ -69,9 +69,9 @@ const authConfig: NextAuthOptions = {
 
         return {
           id: user.id,
-          name: user.name,
+          name: user.name as string,
           email: user.email,
-          role: user.role,
+          role: user.role as "user" | "admin",
         };
       },
     }),
