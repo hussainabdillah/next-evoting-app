@@ -15,10 +15,13 @@ import Link from 'next/link'
 import { BarChart, HelpCircle, Home, Settings, Users, Vote, Activity, PieChart, List } from 'lucide-react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { getTotalVotesCast } from '@/utils/getContract';
 
 export default function OverViewPage() {
   const [voterCount, setVoterCount] = useState<number | null>(null)
+  const [votesCast, setVotesCast] = useState<number | null>(null)
 
+  // Fetching data voters
   useEffect(() => {
     const fetchVoters = async () => {
       try {
@@ -33,6 +36,24 @@ export default function OverViewPage() {
     fetchVoters()
   }, [])
 
+  // Fetching total data vote cast
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/dashboard/voters')
+        const data = await res.json()
+        setVoterCount(data.count)
+  
+        const votes = await getTotalVotesCast()
+        setVotesCast(votes)
+      } catch (error) {
+        console.error('Failed to fetch data:', error)
+      }
+    }
+  
+    fetchData()
+  }, [])
+  
   return (
     <PageContainer scrollable={true}>
       <main className="flex-1 p-8 overflow-auto">
@@ -57,7 +78,9 @@ export default function OverViewPage() {
                 <Vote className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">8,741</div>
+                <div className="text-2xl font-bold">
+                  {votesCast !== null ? votesCast.toLocaleString() : 'Loading...'}
+                </div>
                 {/* <p className="text-xs text-muted-foreground">83.4% turnout</p> */}
               </CardContent>
             </Card>

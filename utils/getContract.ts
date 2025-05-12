@@ -10,7 +10,7 @@ export const getVotingContract = (signerOrProvider: ethers.Signer | ethers.Provi
   return new ethers.Contract(CONTRACT_ADDRESS, ABI, signerOrProvider);
 };
 
-// untuk mengambil hasil voting
+// Untuk mengambil hasil voting
 export const getVotesForCandidate = async (candidateId: number): Promise<number> => {
   if (!window.ethereum) throw new Error("Metamask not found");
 
@@ -20,4 +20,15 @@ export const getVotesForCandidate = async (candidateId: number): Promise<number>
 
   const votes: bigint = await contract.getVotes(candidateId);
   return Number(votes);
+};
+
+// Untuk mengambil jumlah total suara
+export const getTotalVotesCast = async (): Promise<number> => {
+  if (!window.ethereum) throw new Error("Metamask not found");
+
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, await provider.getSigner());
+
+  const totalVotes: bigint = await contract.getTotalVotes(); // pastikan nama fungsinya sesuai
+  return Number(totalVotes);
 };
