@@ -28,7 +28,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Add this if using SQLite locally
-COPY prisma/dev.db ./prisma/dev.db
+# COPY prisma/dev.db ./prisma/dev.db
 
 # Expose port 3000
 EXPOSE 3000
