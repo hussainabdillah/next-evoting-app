@@ -1,7 +1,7 @@
 import { OverViewPageView } from '@/sections/overview/view';
 
 export const metadata = {
-  title: 'Dashboard : Overview'
+  title: 'Evoting : Overview'
 };
 
 export default function page() {

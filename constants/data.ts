@@ -140,12 +140,12 @@ export const userNavItems: NavItem[] = [
     icon: 'post',
     label: 'vote'
   },
-  // {
-  //   title: 'Results',
-  //   href: '/dashboard/results',
-  //   icon: 'result',
-  //   label: 'results'
-  // },
+  {
+    title: 'Results',
+    href: '/dashboard/results',
+    icon: 'result',
+    label: 'results'
+  },
   // {
   //   title: 'Help',
   //   href: '/dashboard/help',

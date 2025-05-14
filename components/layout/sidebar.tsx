@@ -34,7 +34,7 @@ export default function Sidebar({ className, items }: SidebarProps) {
           {!isMinimized && (
             <>
               <Vote className="mr-2 h-6 w-6 text-foreground" />
-              <span className="text-xl font-bold text-foreground">Vote.me</span>
+              <span className="text-xl font-bold text-foreground">Evoting Chain</span>
             </>
           )}
         </Link>

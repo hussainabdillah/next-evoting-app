@@ -12,6 +12,7 @@ import Image from 'next/image'
 import { vote } from "@/lib/actions/vote";
 import { toast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Skeleton } from '@/components/ui/skeleton';
 import confetti from 'canvas-confetti'
 
 
@@ -33,6 +34,8 @@ export default function VoteVIewPage() {
   const [confirmationCode, setConfirmationCode] = useState('')
   const [timestamp, setTimestamp] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isCandidatesLoading, setIsCandidatesLoading] = useState(true)
+  
 
   
   useEffect(() => {
@@ -78,16 +81,18 @@ export default function VoteVIewPage() {
             console.error('Failed to fetch candidates:', res.statusText);
             return;
           }
-  
+
           const data = await res.json();
-          console.log('Data fetched:', data);
           setCandidates(data);
         } catch (error) {
           console.error('Error fetching candidates:', error);
+        } finally {
+          setIsCandidatesLoading(false);
         }
       };
-      fetchCandidates()
-    }, [])
+
+      fetchCandidates();
+    }, []);
 
   const handleVote = (candidate: Candidate) => {
     setSelectedCandidate(candidate)
@@ -130,7 +135,7 @@ export default function VoteVIewPage() {
         {!hasVoted && (
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold text-center">2024 National Election</CardTitle>
+              <CardTitle className="text-2xl font-bold text-center">HIMATIF 2025 Election</CardTitle>
               <CardDescription className="text-center">Cast your vote for the next leader</CardDescription>
             </CardHeader>
           </Card>
@@ -143,9 +148,22 @@ export default function VoteVIewPage() {
               <CardDescription>Select a candidate to cast your vote</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* <ScrollArea className="h-[600px] pr-4"> */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {candidates.map((candidate) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {isCandidatesLoading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <Card key={i} className="overflow-hidden">
+                      <Skeleton className="w-full h-48" />
+                      <CardHeader>
+                        <Skeleton className="h-4 w-1/2 mb-2" />
+                        <Skeleton className="h-3 w-1/3" />
+                      </CardHeader>
+                      <CardFooter>
+                        <Skeleton className="h-10 w-full rounded-md" />
+                      </CardFooter>
+                    </Card>
+                  ))
+                ) : (
+                  candidates.map((candidate) => (
                     <Card key={candidate.id} className="overflow-hidden">
                       <Image
                         src={candidate.image}
@@ -164,9 +182,9 @@ export default function VoteVIewPage() {
                         </Button>
                       </CardFooter>
                     </Card>
-                  ))}
-                </div>
-              {/* </ScrollArea> */}
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
         ) : (      
@@ -219,7 +237,7 @@ export default function VoteVIewPage() {
 
               <div>
                 <h3 className="text-sm font-medium text-gray-500 dark:text-gray-300">Election</h3>
-                <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">2024 National Election</p>
+                <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">2025 General Election Himatif</p>
               </div>
             </div>
           </CardContent>

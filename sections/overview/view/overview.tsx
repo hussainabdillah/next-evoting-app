@@ -10,15 +10,25 @@ import {
 } from '@/components/ui/card';
 import Link from 'next/link'
 import { BarChart, Calendar, HelpCircle, Info, Users } from 'lucide-react'
+import ElectionCountdown from '../election-countdown'
 
 export default function OverViewPage() {
+  // Set the election date (example: 30 days from now)
+  const electionDate = new Date()
+  electionDate.setDate(electionDate.getDate() + 30)
+
+  // Set number admin for customer service
+  const adminNumber = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP;
+  const message = encodeURIComponent(`Hi Admin, I need help regarding the voting process.`);
+  const whatsappLink = `https://wa.me/${adminNumber}?text=${message}`;
+
   return (
     <PageContainer scrollable={true}>
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-4xl mx-auto">
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="text-3xl font-bold text-center">Welcome to the 2024 Informatics Student Election</CardTitle>
+              <CardTitle className="text-3xl font-bold text-center">Welcome to the 2025 General Election for HIMATIF</CardTitle>
               <CardDescription className="text-center text-lg">Your vote shapes our future. Make it count!</CardDescription>
             </CardHeader>
           </Card>
@@ -32,11 +42,11 @@ export default function OverViewPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p>The Informatics Student Election Election is a crucial moment for our program study. This year, we re using a secure e-voting decentralized system to make voting more accessible and efficient.</p>
+                <p>The Election for the Himatif Chairperson marks an important moment for our student association. This year, we are implementing a secure and decentralized e-voting system to enhance accessibility, transparency, and efficiency in the voting process.</p>
               </CardContent>
             </Card>
 
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Calendar className="mr-2" />
@@ -50,7 +60,14 @@ export default function OverViewPage() {
                   <li>Election Day: November 5, 2024</li>
                 </ul>
               </CardContent>
-            </Card>
+            </Card> */}
+            <ElectionCountdown 
+                  targetDate={electionDate}
+                  title="Election Countdown"
+                  description="Make sure you have your wallet ready and know your private key!"
+                  linkText="View Voter Guide"
+                  linkUrl="/voter-guide"
+                />
           </div>
 
           <Card className="mt-6">
@@ -68,7 +85,7 @@ export default function OverViewPage() {
             </CardContent>
             <CardFooter>
               <Button asChild className="w-full">
-                <Link href="/vote">
+                <Link href="/dashboard/vote">
                   Go to Voting Page
                 </Link>
               </Button>
@@ -88,7 +105,7 @@ export default function OverViewPage() {
               </CardContent>
               <CardFooter>
                 <Button asChild variant="outline" className="w-full">
-                  <Link href="/candidates">View Candidates</Link>
+                  <Link href="/dashboard/candidates">View Candidates</Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -105,7 +122,7 @@ export default function OverViewPage() {
               </CardContent>
               <CardFooter>
                 <Button asChild variant="outline" className="w-full">
-                  <Link href="/results">View Results</Link>
+                  <Link href="/dashboard/results">View Results</Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -122,7 +139,13 @@ export default function OverViewPage() {
               </CardContent>
               <CardFooter>
                 <Button asChild variant="outline" className="w-full">
-                  <Link href="/help">Get Help</Link>
+                  <Link
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Get Help
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>
