@@ -66,7 +66,7 @@ export default function OverViewPage() {
                   title="Election Countdown"
                   description="Make sure you have your wallet ready and know your private key!"
                   linkText="View Voter Guide"
-                  linkUrl="/voter-guide"
+                  linkUrl="/dashboard/voter-guide"
                 />
           </div>
 

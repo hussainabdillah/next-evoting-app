@@ -110,18 +110,18 @@ export default function SignInViewPage() {
   
 
   return (
-    <main className="flex-1 p-8 overflow-auto">
-      <div className="max-w-md mx-auto">
-        <div className="text-center mb-6">
+    <main className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* <div className="text-center mb-6">
           <h1 className="text-3xl font-bold">Welcome to E-Voting Chain</h1>
           <p className="text-muted-foreground mt-1">
             Your voice matters, secure and transparent digital voting starts here.
           </p>
-        </div>
+        </div> */}
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">Authentication</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">Welcome to E-Voting Chain</CardTitle>
             <CardDescription className="text-center">Login or create a new account</CardDescription>
           </CardHeader>
           <CardContent>
