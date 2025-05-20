@@ -24,7 +24,7 @@ export default function VoterGuide() {
           <section className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-800 text-white rounded-lg p-8 mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">Voter Guide</h1>
             <p className="text-lg md:text-xl opacity-90 max-w-2xl">
-              Your comprehensive guide to participating in the democratic process through our secure e-voting system.
+              Your comprehensive guide to participating in the election process through our secure e-voting system.
             </p>
             <div className="mt-6 flex flex-wrap gap-4">
               <Button 

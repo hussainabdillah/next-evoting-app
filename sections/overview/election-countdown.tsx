@@ -93,21 +93,43 @@ export default function ElectionCountdown({
           </div>
         ) : (
           <div className="bg-green-100 text-green-800 p-4 rounded-lg text-center">
-            <p className="font-bold">The election has started!</p>
-            <p className="text-sm">You can now cast your vote.</p>
+            <p className="font-bold">The election has finished!</p>
+            <p className="text-sm">Thank you for participating.</p>
           </div>
         )}
         
-        <div className="text-center text-gray-600">
-          <p>{description}</p>
-        </div>
-        
-        <Button variant="outline" className="w-full" asChild>
+        {!isExpired ? (
+          <div className="text-center text-gray-600">
+            <p>{description}</p>
+          </div>
+        ) : (
+          <div className="text-center text-gray-600">
+            <p>The Election is currently closed! You can now see the result here.</p>
+          </div>
+        )}
+
+        {!isExpired ? (
+          <Button variant="outline" className="w-full" asChild>
+            <a href={linkUrl} className="flex items-center justify-center">
+              {linkText}
+              <ExternalLink className="ml-2 h-4 w-4" />
+            </a>
+          </Button>
+        ) : (
+          <Button variant="outline" className="w-full" asChild>
+            <a href="/dashboard/results" className="flex items-center justify-center">
+              See Results
+              <ExternalLink className="ml-2 h-4 w-4" />
+            </a>
+          </Button>
+        )}
+       
+        {/* <Button variant="outline" className="w-full" asChild>
           <a href={linkUrl} className="flex items-center justify-center">
             {linkText}
             <ExternalLink className="ml-2 h-4 w-4" />
           </a>
-        </Button>
+        </Button> */}
       </CardContent>
     </Card>
   )

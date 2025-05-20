@@ -64,7 +64,7 @@ export default function OverViewPage() {
             <ElectionCountdown 
                   targetDate={electionDate}
                   title="Election Countdown"
-                  description="Make sure you have your wallet ready and know your private key!"
+                  description="The Election is currently open! Make sure to read this guide before voting."
                   linkText="View Voter Guide"
                   linkUrl="/dashboard/voter-guide"
                 />
