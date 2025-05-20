@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ExternalLink, CalendarFold } from 'lucide-react'
 
 interface CountdownProps {
-  targetDate: Date
+  targetDate: Date | null
   title?: string
   description?: string
   linkText?: string
@@ -30,6 +30,8 @@ export default function ElectionCountdown({
   const [isExpired, setIsExpired] = useState(false)
 
   useEffect(() => {
+    if (!targetDate) return
+    
     const calculateTimeLeft = () => {
       const difference = targetDate.getTime() - new Date().getTime()
       

@@ -1,3 +1,5 @@
+"use client"
+import { useEffect, useState } from "react"
 import PageContainer from '@/components/layout/page-container';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,11 +13,30 @@ import {
 import Link from 'next/link'
 import { BarChart, Calendar, HelpCircle, Info, Users } from 'lucide-react'
 import ElectionCountdown from '../election-countdown'
+import { doc, getDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 export default function OverViewPage() {
+  // election date countdown
+  const [electionEndDate, setElectionEndDate] = useState<Date | null>(null)
+
+  useEffect(() => {
+    const fetchElection = async () => {
+      const docSnap = await getDoc(doc(db, "election", "settings"))
+      if (docSnap.exists()) {
+        const data = docSnap.data()
+        if (data?.schedule?.to) {
+          setElectionEndDate(new Date(data.schedule.to))
+        }
+      }
+    }
+
+    fetchElection()
+  }, [])
+
   // Set the election date (example: 30 days from now)
-  const electionDate = new Date()
-  electionDate.setDate(electionDate.getDate() + 30)
+  // const electionDate = new Date()
+  // electionDate.setDate(electionDate.getDate() + 30)
 
   // Set number admin for customer service
   const adminNumber = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP;
@@ -62,7 +83,7 @@ export default function OverViewPage() {
               </CardContent>
             </Card> */}
             <ElectionCountdown 
-                  targetDate={electionDate}
+                  targetDate={electionEndDate}
                   title="Election Countdown"
                   description="The Election is currently open! Make sure to read this guide before voting."
                   linkText="View Voter Guide"

@@ -39,6 +39,8 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog"
+import { db } from "@/lib/firebase"
+import { doc, setDoc } from "firebase/firestore"
 
 
 const FormSchema = z.object({
@@ -64,15 +66,18 @@ export default function ElectionManagementPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
 
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
+  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
+    await setDoc(doc(db, "election", "settings"), {
+      isElectionActive: data.isElectionActive,
+      schedule: {
+        from: data.schedule.from.toISOString(),
+        to: data.schedule.to.toISOString(),
+      },
+    })
+
     toast({
       title: "Election settings applied",
       description: "Election settings have been updated successfully.",
-      // description: (
-      //   <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-      //     <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-      //   </pre>
-      // ),
     })
   }
 
