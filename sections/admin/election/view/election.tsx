@@ -1,13 +1,14 @@
 "use client"
 
 import * as React from "react"
+import { useEffect, useState } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { DateRange } from "react-day-picker"
-
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
 import {
@@ -40,7 +41,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog"
 import { db } from "@/lib/firebase"
-import { doc, setDoc } from "firebase/firestore"
+import { doc, setDoc, getDoc } from "firebase/firestore"
 
 
 const FormSchema = z.object({
@@ -52,18 +53,55 @@ const FormSchema = z.object({
 })
 
 export default function ElectionManagementPage() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [initialSchedule, setInitialSchedule] = useState({
+    isElectionActive: true,
+    schedule: {
+      from: new Date(),
+      to: new Date(new Date().setDate(new Date().getDate() + 7)),
+    },
+  });
+
+  useEffect(() => {
+    const fetchElectionSettings = async () => {
+      const docSnap = await getDoc(doc(db, "election", "settings"));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setInitialSchedule({
+          isElectionActive: data.isElectionActive,
+          schedule: {
+            from: new Date(data.schedule.from),
+            to: new Date(data.schedule.to),
+          },
+        });
+        form.reset({
+          isElectionActive: data.isElectionActive,
+          schedule: {
+            from: new Date(data.schedule.from),
+            to: new Date(data.schedule.to),
+          },
+        });
+      }
+      setIsLoading(false)
+    };
+
+    fetchElectionSettings();
+  }, []);
+
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      isElectionActive: true,
-      schedule: {
-        from: new Date(),
-        to: new Date(new Date().setDate(new Date().getDate() + 7)),
-      },
-    },
+    defaultValues: initialSchedule,
+    // {
+    //   isElectionActive: true,
+    //   schedule: {
+    //     from: new Date(),
+    //     to: new Date(new Date().setDate(new Date().getDate() + 7)),
+    //   },
+    // },
   })
 
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
@@ -81,6 +119,25 @@ export default function ElectionManagementPage() {
     })
   }
 
+  // skeleton loading ui
+    if (isLoading) {
+      return (
+        <PageContainer scrollable={true}>
+          <main className="flex-1 p-8 overflow-auto">
+            <div className="max-w-3xl mx-auto space-y-6">
+              <h1 className="text-3xl font-bold mb-6">Manage Election</h1>
+              {/* <Skeleton className="h-24 w-full rounded-lg" /> Election status */}
+              <Skeleton className="h-24 w-full rounded-lg" /> {/* Calendar date range */}
+              {/* button */}
+              {/* <div className="flex justify-end">
+                <Skeleton className="h-10 w-32 rounded-md" />
+              </div> */}
+            </div>
+          </main>
+        </PageContainer>
+      )
+    }
+
   return (
     <PageContainer scrollable={true}>
       <main className="flex-1 p-8 overflow-auto">
@@ -93,7 +150,7 @@ export default function ElectionManagementPage() {
               className="space-y-6"
             >
               {/* Election Status */}
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="isElectionActive"
                 render={({ field }) => (
@@ -112,7 +169,7 @@ export default function ElectionManagementPage() {
                     </FormControl>
                   </FormItem>
                 )}
-              />
+              /> */}
 
               {/* Election Schedule */}
               <FormField
@@ -121,6 +178,9 @@ export default function ElectionManagementPage() {
                 render={({ field }) => (
                   <FormItem className="rounded-lg border p-4">
                     <FormLabel className="text-base mb-2 block">Election Schedule</FormLabel>
+                    <FormDescription>
+                        Set Date schedule for the election start and finished.
+                      </FormDescription>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>

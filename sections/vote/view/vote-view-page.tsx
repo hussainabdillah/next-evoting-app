@@ -6,7 +6,7 @@ import PageContainer from '@/components/layout/page-container';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ChevronRight, BarChart, Home, Users, HelpCircle, Settings, CheckCircle, Copy, Download, Share2, View } from 'lucide-react'
+import { ChevronRight, BarChart, Home, Users, HelpCircle, Settings, CheckCircle, Copy, Download, Share2, View, Info } from 'lucide-react'
 import Link from 'next/link'    
 import Image from 'next/image'
 import { vote } from "@/lib/actions/vote";
@@ -14,6 +14,8 @@ import { toast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from '@/components/ui/skeleton';
 import confetti from 'canvas-confetti'
+import { db } from "@/lib/firebase"
+import { doc, setDoc, getDoc } from "firebase/firestore"
 
 
 type Candidate = {
@@ -35,7 +37,11 @@ export default function VoteVIewPage() {
   const [timestamp, setTimestamp] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isCandidatesLoading, setIsCandidatesLoading] = useState(true)
-  
+  // kondisi waktu voting
+  const [fromDate, setFromDate] = useState<Date | null>(null)
+  const [toDate, setToDate] = useState<Date | null>(null)
+  const [loadingVoteDate, setLoadingVoteDate] = useState(true)
+
 
   
   useEffect(() => {
@@ -128,6 +134,158 @@ export default function VoteVIewPage() {
     }
   };
 
+  // fetching vote date
+    useEffect(() => {
+      const fetchVotingDates = async () => {
+        const docRef = doc(db, "election", "settings")
+        const docSnap = await getDoc(docRef)
+        if (docSnap.exists()) {
+          const data = docSnap.data()
+          setFromDate(new Date(data.schedule.from))
+          setToDate(new Date(data.schedule.to))
+        }
+        setLoadingVoteDate(false)
+      }
+      fetchVotingDates()
+    }, [])
+  
+    const now = new Date();
+
+    if (loadingVoteDate || !fromDate || !toDate) {
+      return (
+        <PageContainer scrollable={true}>
+          <main className="flex-1 p-8 overflow-auto">
+            <div className="max-w-6xl mx-auto space-y-8">
+              {/* Header Card Skeleton */}
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-8 w-1/2 mx-auto mb-2" />
+                  <Skeleton className="h-4 w-3/4 mx-auto" />
+                </CardHeader>
+              </Card>
+
+              {/* Candidates Section Skeleton */}
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-1/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i} className="overflow-hidden">
+                        <Skeleton className="w-full h-48" />
+                        <CardHeader>
+                          <Skeleton className="h-4 w-1/2 mb-2" />
+                          <Skeleton className="h-3 w-1/3" />
+                        </CardHeader>
+                        <CardFooter>
+                          <Skeleton className="h-10 w-full rounded-md" />
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </main>
+        </PageContainer>
+      );
+    }
+
+  // The date of the voting day not started (belum dimulai)
+  if (now < fromDate) {
+    return (
+      <PageContainer scrollable={true}>
+        <main className="flex-1 p-8 overflow-auto">
+          <div className="max-w-6xl mx-auto">
+            {/* header */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-center">
+                  HIMATIF 2025 Election
+                </CardTitle>
+                <CardDescription className="text-center">
+                  Cast your vote for the next leader
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            {/* content */}
+            <Card className="bg-yellow-100 dark:bg-yellow-900">
+              <CardHeader>
+                <CardTitle className="flex items-center text-yellow-800 dark:text-yellow-200 font-bold">
+                  <Info className="mr-2" />
+                  Voting has not started yet!
+                </CardTitle>
+                <CardDescription className="dark:text-yellow-100">
+                  Voting will go live on{" "}
+                  <span className="font-semibold">
+                    {fromDate.toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                      timeZone: "Asia/Jakarta",
+                    })}
+                  </span>
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </main>
+      </PageContainer>
+    );
+  }
+
+  // The date of the voting day completed (sudah selesai)
+  if (now > toDate) {
+    return (
+      <PageContainer scrollable={true}>
+        <main className="flex-1 p-8 overflow-auto">
+          <div className="max-w-6xl mx-auto">
+            {/* header */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-center">
+                  HIMATIF 2025 Election
+                </CardTitle>
+                <CardDescription className="text-center">
+                  Cast your vote for the next leader
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            {/* content */}
+            <Card className="bg-green-100 dark:bg-green-900">
+              <CardHeader>
+                <CardTitle className="flex items-center text-green-800 dark:text-green-200 font-bold">
+                  <Info className="mr-2" />
+                  Voting already finished!
+                </CardTitle>
+                <CardDescription className="dark:text-green-100">
+                  Voting completed on{" "}
+                  <span className="font-semibold">
+                    {toDate.toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                      timeZone: "Asia/Jakarta",
+                    })}
+                  </span>. Thank you for participating.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </main>
+      </PageContainer>
+    );
+  }
+
+
   return (
     <PageContainer scrollable={true}>
       <main className="flex-1 p-8 overflow-auto">
@@ -136,7 +294,7 @@ export default function VoteVIewPage() {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-center">HIMATIF 2025 Election</CardTitle>
-              <CardDescription className="text-center">Cast your vote for the next leader</CardDescription>
+              <CardDescription className="text-center">The Election is currently open! Cast your vote for the next leader</CardDescription>
             </CardHeader>
           </Card>
         )}
@@ -162,6 +320,10 @@ export default function VoteVIewPage() {
                       </CardFooter>
                     </Card>
                   ))
+                ) : candidates.length === 0 ? (
+                  <div className="col-span-full text-center text-gray-500 dark:text-gray-400">
+                    There are no candidates registered yet..
+                  </div>
                 ) : (
                   candidates.map((candidate) => (
                     <Card key={candidate.id} className="overflow-hidden">

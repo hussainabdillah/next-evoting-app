@@ -185,12 +185,12 @@ export const adminNavItems: NavItem[] = [
     icon: 'user',
     label: 'users'
   },
-  {
-    title: 'Smart Contract',
-    href: '/admin/smartcontract',
-    icon: 'kanban',
-    label: 'smart contract'
-  }
+  // {
+  //   title: 'Smart Contract',
+  //   href: '/admin/smartcontract',
+  //   icon: 'kanban',
+  //   label: 'smart contract'
+  // }
 ];
 
 export const votingSteps = [

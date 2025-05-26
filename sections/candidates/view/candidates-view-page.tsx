@@ -10,6 +10,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger
 } from "@/components/ui/dialog"
 import { Skeleton } from '@/components/ui/skeleton'
+import { Info } from 'lucide-react'
 
 type Candidate = {
   id: number
@@ -77,6 +78,20 @@ export default function CandidatesViewPage() {
                   </CardFooter>
                 </Card>
               ))
+            ) : candidates.length === 0 ? (
+              <div className="col-span-full">
+                <Card className="bg-gray-100 dark:bg-gray-900">
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-gray-800 dark:text-gray-200 font-bold">
+                      <Info className="mr-2" />
+                      Candidates Empty!
+                    </CardTitle>
+                    <CardDescription className="dark:text-gray-100">
+                      There are no candidates registered yet.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
             ) : (
               candidates.map((candidate) => (
                 <Card key={candidate.id} className="overflow-hidden">

@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BarChart, HelpCircle, Home, Settings, Users, Vote, Plus } from 'lucide-react'
 import { toast } from "@/components/ui/use-toast"
-
+import { Skeleton } from '@/components/ui/skeleton';
 
 type User = {
   id: string
@@ -26,6 +26,7 @@ type User = {
 
 export default function UsersManagementPage() {
   const [users, setUsers] = useState<User[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -35,6 +36,8 @@ export default function UsersManagementPage() {
         setUsers(data);
       } catch (error) {
         console.error('Failed to fetch users', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -203,48 +206,55 @@ export default function UsersManagementPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Created date</TableHead>
-                    <TableHead>Wallet address</TableHead>
+                    <TableHead className="hidden md:table-cell">Email</TableHead>
+                    <TableHead className="hidden md:table-cell">Created date</TableHead>
+                    <TableHead className="hidden md:table-cell">Wallet address</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                {users.map(user => (
-                    <TableRow key={user.id}>
-                      <TableCell>{user.name ?? 'Unnamed User'}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                      {new Intl.DateTimeFormat('en-US', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      }).format(new Date(user.createdAt))}
-                      </TableCell>
-                      <TableCell>{user.walletAddress || 'Not Connected'}</TableCell>
-                      <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded-sm text-xs font-semibold 
-                          ${user.status === 'Verified' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
-                        `}
-                      >
-                        {user.status}
-                      </span>
-                      </TableCell>
-                      <TableCell>
-                        {/* Tombol verifikasi */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleToggleStatus(user.id, user.status)}
-                        >
-                          {user.status === 'Verified' ? 'Unverify' : 'Verify'}
-                        </Button>
-                      </TableCell>
-                      {/* Kosongin Wallet Address, Status, Actions */}
-                    </TableRow>
-                  ))}
+                  {isLoading
+                    ? Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-4 w-20 md:w-32" /></TableCell>
+                          <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-48" /></TableCell>
+                          <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16 md:w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-8 w-16 md:w-20" /></TableCell>
+                        </TableRow>
+                      ))
+                    : users.map(user => (
+                        <TableRow key={user.id}>
+                          <TableCell>{user.name ?? 'Unnamed User'}</TableCell>
+                          <TableCell className="hidden md:table-cell">{user.email}</TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {new Intl.DateTimeFormat('en-US', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            }).format(new Date(user.createdAt))}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">{user.walletAddress || 'Not Connected'}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-sm text-xs font-semibold whitespace-nowrap ${
+                              user.status === 'Verified' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {user.status}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleToggleStatus(user.id, user.status)}
+                            >
+                              {user.status === 'Verified' ? 'Unverify' : 'Verify'}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                 </TableBody>
               </Table>
             </CardContent>

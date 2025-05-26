@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
 import { MoreHorizontal, Pencil, Trash, Plus } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Candidate = {
   id: number;
@@ -57,15 +58,25 @@ export default function CandidatesManagementPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [candidates, setCandidates] = useState<Candidate[]>([]);
 
+  // skeleton state
+  const [isLoading, setIsLoading] = useState(true)
+
   // Fetch candidates from API
   useEffect(() => {
     fetchCandidates();
   }, []);
 
   const fetchCandidates = async () => {
-    const res = await fetch('/api/candidates');
-    const data = await res.json();
-    setCandidates(data);
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/candidates');
+      const data = await res.json();
+      setCandidates(data);
+    } catch (error) {
+      console.error("Failed to fetch candidates", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -171,16 +182,29 @@ export default function CandidatesManagementPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Image</TableHead>
+                    <TableHead className="hidden md:table-cell">Image</TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead>Part</TableHead>
+                    <TableHead className="hidden md:table-cell">Party</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {candidates.map((candidate) => (
+                  {isLoading ? (
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell><Skeleton className="hidden md:table-cell w-[50px] h-[50px] rounded-full" /></TableCell>
+                        <TableCell><Skeleton className="w-24 h-4" /></TableCell>
+                        <TableCell><Skeleton className="hidden md:table-cell h-4 w-[80px]" /></TableCell>
+                        <TableCell className="flex gap-2">
+                          <Skeleton className="h-8 w-[60px]" />
+                          {/* <Skeleton className="h-8 w-[60px]" /> */}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    candidates.map((candidate) => (
                     <TableRow key={candidate.id}>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <Image
                           src={candidate.image}
                           alt={candidate.name}
@@ -190,7 +214,7 @@ export default function CandidatesManagementPage() {
                         />
                       </TableCell>
                       <TableCell>{candidate.name}</TableCell>
-                      <TableCell>{candidate.party}</TableCell>
+                      <TableCell className="hidden md:table-cell">{candidate.party}</TableCell>
                       <TableCell className="flex gap-2">
                         <Dialog
                           open={isEditDialogOpen}
@@ -335,7 +359,8 @@ export default function CandidatesManagementPage() {
                         </Dialog>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

@@ -18,25 +18,25 @@ import { db } from "@/lib/firebase"
 
 export default function OverViewPage() {
   // election date countdown
-  const [electionEndDate, setElectionEndDate] = useState<Date | null>(null)
+  // const [electionEndDate, setElectionEndDate] = useState<Date | null>(null)
+  const [schedule, setSchedule] = useState<{ from: Date; to: Date } | null>(null)
 
   useEffect(() => {
     const fetchElection = async () => {
       const docSnap = await getDoc(doc(db, "election", "settings"))
       if (docSnap.exists()) {
         const data = docSnap.data()
-        if (data?.schedule?.to) {
-          setElectionEndDate(new Date(data.schedule.to))
+        if (data?.schedule?.from && data?.schedule?.to) {
+          setSchedule({
+            from: new Date(data.schedule.from),
+            to: new Date(data.schedule.to),
+          })
         }
       }
     }
 
     fetchElection()
   }, [])
-
-  // Set the election date (example: 30 days from now)
-  // const electionDate = new Date()
-  // electionDate.setDate(electionDate.getDate() + 30)
 
   // Set number admin for customer service
   const adminNumber = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP;
@@ -66,24 +66,8 @@ export default function OverViewPage() {
                 <p>The Election for the Himatif Chairperson marks an important moment for our student association. This year, we are implementing a secure and decentralized e-voting system to enhance accessibility, transparency, and efficiency in the voting process.</p>
               </CardContent>
             </Card>
-
-            {/* <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="mr-2" />
-                  Important Dates
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc list-inside space-y-2">
-                  <li>Voter Registration Deadline: July 1, 2024</li>
-                  <li>Early Voting Begins: October 15, 2024</li>
-                  <li>Election Day: November 5, 2024</li>
-                </ul>
-              </CardContent>
-            </Card> */}
             <ElectionCountdown 
-                  targetDate={electionEndDate}
+                  schedule={schedule}
                   title="Election Countdown"
                   description="The Election is currently open! Make sure to read this guide before voting."
                   linkText="View Voter Guide"
