@@ -22,6 +22,11 @@ const nextConfig = {
         hostname: 'avatar.iran.liara.run',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'idodjgjapyzunqygmnxm.supabase.co',
+        pathname: '/**',
+      }
     ],
   },
 };

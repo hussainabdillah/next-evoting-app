@@ -208,7 +208,7 @@ export default function UsersManagementPage() {
                     <TableHead>Name</TableHead>
                     <TableHead className="hidden md:table-cell">Email</TableHead>
                     <TableHead className="hidden md:table-cell">Created date</TableHead>
-                    <TableHead className="hidden md:table-cell">Wallet address</TableHead>
+                    {/* <TableHead className="hidden md:table-cell">Wallet address</TableHead> */}
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -220,7 +220,7 @@ export default function UsersManagementPage() {
                           <TableCell><Skeleton className="h-4 w-20 md:w-32" /></TableCell>
                           <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-48" /></TableCell>
                           <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
-                          <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
+                          {/* <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-32" /></TableCell> */}
                           <TableCell><Skeleton className="h-4 w-16 md:w-20" /></TableCell>
                           <TableCell><Skeleton className="h-8 w-16 md:w-20" /></TableCell>
                         </TableRow>
@@ -236,7 +236,7 @@ export default function UsersManagementPage() {
                               year: 'numeric',
                             }).format(new Date(user.createdAt))}
                           </TableCell>
-                          <TableCell className="hidden md:table-cell">{user.walletAddress || 'Not Connected'}</TableCell>
+                          {/* <TableCell className="hidden md:table-cell">{user.walletAddress || 'Not Connected'}</TableCell> */}
                           <TableCell>
                             <span className={`px-2 py-1 rounded-sm text-xs font-semibold whitespace-nowrap ${
                               user.status === 'Verified' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'

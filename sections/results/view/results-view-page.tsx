@@ -232,7 +232,7 @@ export default function ResultsViewPage() {
                                   alt={candidate.name}
                                   width={50}
                                   height={50}
-                                  className="rounded-full object-cover"
+                                  className="w-12 h-12 rounded-full object-cover"
                                 />
                               </TableCell>
                               <TableCell>{candidate.name}</TableCell>

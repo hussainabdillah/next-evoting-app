@@ -42,6 +42,7 @@ export async function POST(request: Request) {
         email,
         password: hashedPassword,
         role: "user", // Default role
+        status: "Verified" // Default status user if created by admin
       },
     });
 

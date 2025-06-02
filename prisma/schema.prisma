@@ -26,6 +26,7 @@ model User {
   sessions       Session[]
   walletAddress  String?
   status         String   @default("Not Verified")
+  hasVoted       Boolean  @default(false)
 }
 
 model Account {

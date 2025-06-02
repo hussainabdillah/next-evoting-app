@@ -28,6 +28,8 @@ const handler = NextAuth({
           name: user.name as string,
           email: user.email,
           role: user.role as "admin" | "user",
+          status: user.status as "Verified" | "Not Verified",
+          hasVoted: user.hasVoted
         }
       },
     }),
@@ -37,6 +39,8 @@ const handler = NextAuth({
       if (user) {
         token.id = user.id
         token.role = user.role // Menyimpan role pada JWT
+        token.status = user.status // Menyimpan status pada JWT
+        token.hasVoted = user.hasVoted
       }
       return token
     },
@@ -44,6 +48,8 @@ const handler = NextAuth({
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as "user" | "admin" // Menyinkronkan tipe role
+        session.user.status = token.status as "Verified" | "Not Verified" // Menyimpan ke session
+        session.user.hasVoted = token.hasVoted as boolean
       }
       return session
     },
@@ -52,7 +58,7 @@ const handler = NextAuth({
     strategy: 'jwt',
   },
   pages: {
-    signIn: '/signin', // ganti jika kamu pakai page lain
+    signIn: '/signin',
   },
 })
 

@@ -72,6 +72,8 @@ const authConfig: NextAuthOptions = {
           name: user.name as string,
           email: user.email,
           role: user.role as "user" | "admin",
+          status: user.status as "Verified" | "Not Verified",
+          hasVoted: user.hasVoted
         };
       },
     }),
