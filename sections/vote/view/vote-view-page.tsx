@@ -204,10 +204,27 @@ export default function VoteViewPage() {
       }
       fetchVotingDates()
     }, [])
-  
+    
+    if (authStatus === "loading") {
+        return (
+          <PageContainer scrollable={true}>
+            <main className="flex-1 p-8 overflow-auto">
+              <div className="max-w-6xl mx-auto">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Loading...</CardTitle>
+                    <CardDescription>Please wait while we verify your session</CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
+            </main>
+          </PageContainer>
+        )
+    }
+
     const now = new Date();
 
-    if (loadingVoteDate || !fromDate || !toDate || authStatus === "loading") {
+    if (loadingVoteDate || !fromDate || !toDate) {
       return (
         <PageContainer scrollable={true}>
           <main className="flex-1 p-8 overflow-auto">
@@ -342,7 +359,7 @@ export default function VoteViewPage() {
   }
 
   // If the user is not verified, it will render this ui
-    if (authStatus === "authenticated" && userStatus === "Not Verified") {
+    if (authStatus === "authenticated" && userStatus !== "Verified") {
     return (
         <PageContainer scrollable={true}>
           <main className="flex-1 p-8 overflow-auto">
