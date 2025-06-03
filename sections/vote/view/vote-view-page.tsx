@@ -342,28 +342,27 @@ export default function VoteViewPage() {
   }
 
   // If the user is not verified, it will render this ui
-    if (userStatus !== "Verified") {
+    if (userStatus === "Not Verified") {
     return (
-      <>
-      {/* Dialog Not Verified Status */}
-        <Dialog open={showNotVerifiedDialog} onOpenChange={setShowNotVerifiedDialog}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Account Not Verified</DialogTitle>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  Your account is not verified. Please contact the admin to verify your account.
-                </p>
-            </DialogHeader>
-            <DialogFooter>
-              <Button onClick={() => setShowNotVerifiedDialog(false)} variant="secondary">
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
         <PageContainer scrollable={true}>
           <main className="flex-1 p-8 overflow-auto">
             <div className="max-w-6xl mx-auto">
+              {/* Dialog Not Verified Status */}
+                <Dialog open={showNotVerifiedDialog} onOpenChange={setShowNotVerifiedDialog}>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Account Not Verified</DialogTitle>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                          Your account is not verified. Please contact the admin to verify your account.
+                        </p>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button onClick={() => setShowNotVerifiedDialog(false)} variant="secondary">
+                        Close
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               <Card className="bg-gray-100 dark:bg-gray-900">
                 <CardHeader>
                   <CardTitle className="flex items-center text-gray-800 dark:text-gray-200 font-bold">
@@ -387,7 +386,6 @@ export default function VoteViewPage() {
             </div>
           </main>
         </PageContainer>
-      </>
     )
   }
 
