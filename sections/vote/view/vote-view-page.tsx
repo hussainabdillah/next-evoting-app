@@ -47,7 +47,7 @@ export default function VoteViewPage() {
   //cek status user menggunakan useSession
   const { data: session, status: authStatus } = useSession()
   const userStatus = session?.user?.status 
-  // const [showNotVerifiedDialog, setShowNotVerifiedDialog] = useState(false)
+  const [showNotVerifiedDialog, setShowNotVerifiedDialog] = useState(false)
 
   // contact admin
   // Set number admin for admin
@@ -56,11 +56,11 @@ export default function VoteViewPage() {
   const whatsappLink = `https://wa.me/${adminNumber}?text=${message}`;
 
   // fetch data user session dan cek apakah user sudah verifikasi atau belum
-//   useEffect(() => {
-//   if (authStatus === "authenticated" && userStatus == "Not Verified") {
-//     setShowNotVerifiedDialog(true)
-//   }
-// }, [authStatus, userStatus])
+  useEffect(() => {
+    if (authStatus === "authenticated" && userStatus == "Not Verified") {
+      setShowNotVerifiedDialog(true)
+    }
+  }, [authStatus, userStatus])
 
 
   useEffect(() => {
@@ -120,11 +120,21 @@ export default function VoteViewPage() {
     }, []);
 
   const handleVote = (candidate: Candidate) => {
+    if (userStatus === "Not Verified") {
+      setShowNotVerifiedDialog(true);
+      return; // stop proses vote
+    }
+
     setSelectedCandidate(candidate)
     setShowConfirmation(true)
   }
 
   const confirmVote = async () => {
+    if (userStatus === "Not Verified") {
+      setShowNotVerifiedDialog(true);
+      return;
+    }
+
     if (selectedCandidate) {
       setShowConfirmation(false);
       setIsLoading(true)  
@@ -205,22 +215,22 @@ export default function VoteViewPage() {
       fetchVotingDates()
     }, [])
     
-    if (authStatus === "loading") {
-        return (
-          <PageContainer scrollable={true}>
-            <main className="flex-1 p-8 overflow-auto">
-              <div className="max-w-6xl mx-auto">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Loading...</CardTitle>
-                    <CardDescription>Please wait while we verify your session</CardDescription>
-                  </CardHeader>
-                </Card>
-              </div>
-            </main>
-          </PageContainer>
-        )
-    }
+    // if (authStatus === "loading") {
+    //     return (
+    //     <PageContainer scrollable={true}>
+    //       <main className="flex-1 p-8 overflow-auto">
+    //         <div className="max-w-6xl mx-auto">
+    //           <Card>
+    //             <CardHeader>
+    //               <CardTitle>Loading...</CardTitle>
+    //               <CardDescription>Please wait while we verify your session</CardDescription>
+    //             </CardHeader>
+    //           </Card>
+    //         </div>
+    //       </main>
+    //     </PageContainer>
+    //   )
+    // }
 
     const now = new Date();
 
@@ -359,52 +369,52 @@ export default function VoteViewPage() {
   }
 
   // If the user is not verified, it will render this ui
-    if (authStatus === "authenticated" && userStatus !== "Verified") {
-    return (
-        <PageContainer scrollable={true}>
-          <main className="flex-1 p-8 overflow-auto">
-            <div className="max-w-6xl mx-auto">
-              {/* Dialog Not Verified Status */}
-                {/* <Dialog open={showNotVerifiedDialog} onOpenChange={setShowNotVerifiedDialog}>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Account Not Verified</DialogTitle>
-                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                          Your account is not verified. Please contact the admin to verify your account.
-                        </p>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button onClick={() => setShowNotVerifiedDialog(false)} variant="secondary">
-                        Close
-                      </Button> 
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog> */}
-              <Card className="bg-gray-100 dark:bg-gray-900">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-gray-800 dark:text-gray-200 font-bold">
-                    <Info className="mr-2" />
-                    You are not allowed to vote
-                  </CardTitle>
-                  <CardDescription className="dark:text-red-100">
-                    Please{" "}
-                    <a 
-                    href={whatsappLink}
-                    target='_blank'
-                    rel="noopener noreferrer"
-                    className="text-primary underline-offset-4 hover:underline"
-                    >
-                      Contact Admin
-                    </a>{" "}
-                    to verify your account and then re-login to proceed with voting process.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-          </main>
-        </PageContainer>
-    )
-  }
+  //   if (authStatus === "authenticated" && userStatus !== "Verified") {
+  //   return (
+  //       <PageContainer scrollable={true}>
+  //         <main className="flex-1 p-8 overflow-auto">
+  //           <div className="max-w-6xl mx-auto">
+  //             {/* Dialog Not Verified Status */}
+  //               <Dialog open={showNotVerifiedDialog} onOpenChange={setShowNotVerifiedDialog}>
+  //                 <DialogContent className="max-w-md">
+  //                   <DialogHeader>
+  //                     <DialogTitle>Account Not Verified</DialogTitle>
+  //                       <p className="text-sm text-gray-700 dark:text-gray-300">
+  //                         Your account is not verified. Please contact the admin to verify your account.
+  //                       </p>
+  //                   </DialogHeader>
+  //                   <DialogFooter>
+  //                     <Button onClick={() => setShowNotVerifiedDialog(false)} variant="secondary">
+  //                       Close
+  //                     </Button>
+  //                   </DialogFooter>
+  //                 </DialogContent>
+  //               </Dialog>
+  //             <Card className="bg-gray-100 dark:bg-gray-900">
+  //               <CardHeader>
+  //                 <CardTitle className="flex items-center text-gray-800 dark:text-gray-200 font-bold">
+  //                   <Info className="mr-2" />
+  //                   You are not allowed to vote
+  //                 </CardTitle>
+  //                 <CardDescription className="dark:text-red-100">
+  //                   Please{" "}
+  //                   <a 
+  //                   href={whatsappLink}
+  //                   target='_blank'
+  //                   rel="noopener noreferrer"
+  //                   className="text-primary underline-offset-4 hover:underline"
+  //                   >
+  //                     Contact Admin
+  //                   </a>{" "}
+  //                   to verify your account and then re-login to proceed with voting process.
+  //                 </CardDescription>
+  //               </CardHeader>
+  //             </Card>
+  //           </div>
+  //         </main>
+  //       </PageContainer>
+  //   )
+  // }
 
     if (alreadyVote) {
       return (
@@ -614,6 +624,32 @@ export default function VoteViewPage() {
             </div>
           </div>
         )}
+
+        {/* Dialog Not Verified */}
+        <Dialog open={showNotVerifiedDialog} onOpenChange={setShowNotVerifiedDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Account Not Verified</DialogTitle>
+              <DialogDescription>
+                Your account is not verified. Please{" "}
+                <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-primary underline-offset-4 hover:underline"
+              >
+                Contact Admin
+              </a>{" "}
+                 to verify your account and re-login to continue.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button onClick={() => setShowNotVerifiedDialog(false)} variant="secondary">
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </PageContainer>
   );
