@@ -47,7 +47,7 @@ export default function VoteViewPage() {
   //cek status user menggunakan useSession
   const { data: session, status: authStatus } = useSession()
   const userStatus = session?.user?.status 
-  const [showNotVerifiedDialog, setShowNotVerifiedDialog] = useState(false)
+  // const [showNotVerifiedDialog, setShowNotVerifiedDialog] = useState(false)
 
   // contact admin
   // Set number admin for admin
@@ -56,11 +56,11 @@ export default function VoteViewPage() {
   const whatsappLink = `https://wa.me/${adminNumber}?text=${message}`;
 
   // fetch data user session dan cek apakah user sudah verifikasi atau belum
-  useEffect(() => {
-  if (authStatus === "authenticated" && userStatus == "Not Verified") {
-    setShowNotVerifiedDialog(true)
-  }
-}, [authStatus, userStatus])
+//   useEffect(() => {
+//   if (authStatus === "authenticated" && userStatus == "Not Verified") {
+//     setShowNotVerifiedDialog(true)
+//   }
+// }, [authStatus, userStatus])
 
 
   useEffect(() => {
@@ -365,7 +365,7 @@ export default function VoteViewPage() {
           <main className="flex-1 p-8 overflow-auto">
             <div className="max-w-6xl mx-auto">
               {/* Dialog Not Verified Status */}
-                <Dialog open={showNotVerifiedDialog} onOpenChange={setShowNotVerifiedDialog}>
+                {/* <Dialog open={showNotVerifiedDialog} onOpenChange={setShowNotVerifiedDialog}>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
                       <DialogTitle>Account Not Verified</DialogTitle>
@@ -376,10 +376,10 @@ export default function VoteViewPage() {
                     <DialogFooter>
                       <Button onClick={() => setShowNotVerifiedDialog(false)} variant="secondary">
                         Close
-                      </Button>
+                      </Button> 
                     </DialogFooter>
                   </DialogContent>
-                </Dialog>
+                </Dialog> */}
               <Card className="bg-gray-100 dark:bg-gray-900">
                 <CardHeader>
                   <CardTitle className="flex items-center text-gray-800 dark:text-gray-200 font-bold">
