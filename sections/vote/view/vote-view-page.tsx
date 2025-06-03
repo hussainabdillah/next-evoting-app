@@ -207,7 +207,7 @@ export default function VoteViewPage() {
   
     const now = new Date();
 
-    if (loadingVoteDate || !fromDate || !toDate) {
+    if (loadingVoteDate || !fromDate || !toDate || authStatus === "loading") {
       return (
         <PageContainer scrollable={true}>
           <main className="flex-1 p-8 overflow-auto">
@@ -342,7 +342,7 @@ export default function VoteViewPage() {
   }
 
   // If the user is not verified, it will render this ui
-    if (userStatus === "Not Verified") {
+    if (authStatus === "authenticated" && userStatus === "Not Verified") {
     return (
         <PageContainer scrollable={true}>
           <main className="flex-1 p-8 overflow-auto">
