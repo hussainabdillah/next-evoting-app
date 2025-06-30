@@ -30,7 +30,7 @@ async function seedCandidates() {
       {
         "name": "Siti Nurhaliza",
         "party": "Bidang Kemahasiswaan",
-        "image": "https://avatar.iran.liara.run/public/6",
+        "image": "https://avatar.iran.liara.run/public/98",
         "bio": "Siti Nurhaliza adalah mahasiswa Informatika yang peduli pada pengembangan soft skill dan kesejahteraan mahasiswa di kampus."
       },
       {
