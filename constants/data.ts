@@ -145,13 +145,7 @@ export const userNavItems: NavItem[] = [
     href: '/dashboard/results',
     icon: 'result',
     label: 'results'
-  },
-  // {
-  //   title: 'Help',
-  //   href: '/dashboard/help',
-  //   icon: 'help',
-  //   label: 'help'
-  // }
+  }
 ];
 
 export const adminNavItems: NavItem[] = [
@@ -184,13 +178,7 @@ export const adminNavItems: NavItem[] = [
     href: '/admin/users',
     icon: 'user',
     label: 'users'
-  },
-  // {
-  //   title: 'Smart Contract',
-  //   href: '/admin/smartcontract',
-  //   icon: 'kanban',
-  //   label: 'smart contract'
-  // }
+  }
 ];
 
 export const votingSteps = [
