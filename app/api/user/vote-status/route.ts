@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
-// GET
+// GET status user has already voted
 export async function GET() {
   const session = await auth()
 

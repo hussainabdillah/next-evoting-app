@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 
+// POST change user vote status
+// This is used to update the user's voting status after they have voted.
 export async function POST(req: NextRequest) {
   const session = await auth()
   
@@ -25,8 +27,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'User has already voted' }, { status: 403 })
   }
 
-  // Di sini seharusnya kamu juga menyimpan data vote ke database
-  // Tapi karena kamu menggunakan Smart Contract, kita hanya update status
+  // Di sini saya tidak menyimpan data vote ke database
+  // Karena saya menggunakan Smart Contract, jadi hanya update status user
 
   await prisma.user.update({
     where: { id: user.id },

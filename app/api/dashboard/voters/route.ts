@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// GET count voters
 export async function GET() {
   try {
     const count = await prisma.user.count({
