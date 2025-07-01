@@ -1,18 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import PageContainer from '@/components/layout/page-container';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ChevronRight, BarChart, Home, Users, HelpCircle, Settings, CheckCircle, Copy, Download, Share2, View } from 'lucide-react'
+import { ChevronRight, BarChart, Home, Users, HelpCircle, Settings, CheckCircle, Copy, Download, Share2, View, Info, Vote } from 'lucide-react'
 import Link from 'next/link'    
 import Image from 'next/image'
 import { vote } from "@/lib/actions/vote";
 import { toast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Skeleton } from '@/components/ui/skeleton';
 import confetti from 'canvas-confetti'
+import { db } from "@/lib/firebase"
+import { doc, setDoc, getDoc } from "firebase/firestore"
 
 
 type Candidate = {
@@ -24,17 +28,41 @@ type Candidate = {
   bio: string
 }
 
-export default function VoteVIewPage() {
+export default function VoteViewPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [transactionId, setTransactionId] = useState<string>('')
   const [hasVoted, setHasVoted] = useState(false)
+  const [alreadyVote, setAlreadyVote] = useState(false)
   const [confirmationCode, setConfirmationCode] = useState('')
   const [timestamp, setTimestamp] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isCandidatesLoading, setIsCandidatesLoading] = useState(true)
+  // kondisi waktu voting
+  const [fromDate, setFromDate] = useState<Date | null>(null)
+  const [toDate, setToDate] = useState<Date | null>(null)
+  const [loadingVoteDate, setLoadingVoteDate] = useState(true)
 
-  
+  //cek status user menggunakan useSession
+  const { data: session, status: authStatus } = useSession()
+  const userStatus = session?.user?.status 
+  const [showNotVerifiedDialog, setShowNotVerifiedDialog] = useState(false)
+
+  // contact admin
+  // Set number admin for admin
+  const adminNumber = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP;
+  const message = encodeURIComponent(`Hi Admin, I need help regarding the verification of voting process.`);
+  const whatsappLink = `https://wa.me/${adminNumber}?text=${message}`;
+
+  // fetch data user session dan cek apakah user sudah verifikasi atau belum
+  useEffect(() => {
+    if (authStatus === "authenticated" && userStatus == "Not Verified") {
+      setShowNotVerifiedDialog(true)
+    }
+  }, [authStatus, userStatus])
+
+
   useEffect(() => {
     // Generate a random confirmation code
     const generateCode = () => {
@@ -78,33 +106,71 @@ export default function VoteVIewPage() {
             console.error('Failed to fetch candidates:', res.statusText);
             return;
           }
-  
+
           const data = await res.json();
-          console.log('Data fetched:', data);
           setCandidates(data);
         } catch (error) {
           console.error('Error fetching candidates:', error);
+        } finally {
+          setIsCandidatesLoading(false);
         }
       };
-      fetchCandidates()
-    }, [])
+
+      fetchCandidates();
+    }, []);
 
   const handleVote = (candidate: Candidate) => {
+    if (userStatus === "Not Verified") {
+      setShowNotVerifiedDialog(true);
+      return; // stop proses vote
+    }
+
     setSelectedCandidate(candidate)
     setShowConfirmation(true)
   }
 
   const confirmVote = async () => {
+    if (userStatus === "Not Verified") {
+      setShowNotVerifiedDialog(true);
+      return;
+    }
+
     if (selectedCandidate) {
       setShowConfirmation(false);
       setIsLoading(true)  
       try {
+        // first send voting/transaction to smart contract 
         const tx = await vote(selectedCandidate.id); // vote returns transaction, vote di blockchain
+        await tx.wait();
+
+        // then save tx hash to state
         setTransactionId(tx.hash); // save tx hash as transaction ID
+
+        // update: call api for changing to has voted on database
+        const res = await fetch('/api/vote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ candidateId: selectedCandidate.id }),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Failed to vote');
+        }
+        
+        // update ui
         setCandidates(candidates.map(c => 
           c.id === selectedCandidate.id ? { ...c, votes: c.votes + 1 } : c
         ));
         setHasVoted(true);
+
+        // then show toast for succes and finish voting
+        toast({
+          title: 'Vote successful',
+          description: `You voted for ${selectedCandidate.name}`,
+          variant: 'default',
+        });
+
       } catch (error: any) {
         console.error("Voting failed:", error);
         const message =
@@ -123,6 +189,267 @@ export default function VoteVIewPage() {
     }
   };
 
+  // fetching if user has voted or no 
+    useEffect(() => {
+      const fetchVoteStatus = async () => {
+        const res = await fetch('/api/user/vote-status');
+        const data = await res.json();
+        setAlreadyVote(data.hasVoted); // true / false dari backend
+      };
+
+      fetchVoteStatus();
+    }, []);
+
+  // fetching vote date
+    useEffect(() => {
+      const fetchVotingDates = async () => {
+        const docRef = doc(db, "election", "settings")
+        const docSnap = await getDoc(docRef)
+        if (docSnap.exists()) {
+          const data = docSnap.data()
+          setFromDate(new Date(data.schedule.from))
+          setToDate(new Date(data.schedule.to))
+        }
+        setLoadingVoteDate(false)
+      }
+      fetchVotingDates()
+    }, [])
+    
+    // if (authStatus === "loading") {
+    //     return (
+    //     <PageContainer scrollable={true}>
+    //       <main className="flex-1 p-8 overflow-auto">
+    //         <div className="max-w-6xl mx-auto">
+    //           <Card>
+    //             <CardHeader>
+    //               <CardTitle>Loading...</CardTitle>
+    //               <CardDescription>Please wait while we verify your session</CardDescription>
+    //             </CardHeader>
+    //           </Card>
+    //         </div>
+    //       </main>
+    //     </PageContainer>
+    //   )
+    // }
+
+    const now = new Date();
+
+    if (loadingVoteDate || !fromDate || !toDate) {
+      return (
+        <PageContainer scrollable={true}>
+          <main className="flex-1 p-8 overflow-auto">
+            <div className="max-w-6xl mx-auto space-y-8">
+              {/* Header Card Skeleton */}
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-8 w-1/2 mx-auto mb-2" />
+                  <Skeleton className="h-4 w-3/4 mx-auto" />
+                </CardHeader>
+              </Card>
+
+              {/* Candidates Section Skeleton */}
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-1/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i} className="overflow-hidden">
+                        <Skeleton className="w-full h-48" />
+                        <CardHeader>
+                          <Skeleton className="h-4 w-1/2 mb-2" />
+                          <Skeleton className="h-3 w-1/3" />
+                        </CardHeader>
+                        <CardFooter>
+                          <Skeleton className="h-10 w-full rounded-md" />
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </main>
+        </PageContainer>
+      );
+    }
+
+  // The date of the voting day not started (belum dimulai)
+  if (now < fromDate) {
+    return (
+      <PageContainer scrollable={true}>
+        <main className="flex-1 p-8 overflow-auto">
+          <div className="max-w-6xl mx-auto">
+            {/* header */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-center">
+                  HIMATIF 2025 Election
+                </CardTitle>
+                <CardDescription className="text-center">
+                  Cast your vote for the next leader
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            {/* content */}
+            <Card className="bg-yellow-100 dark:bg-yellow-900">
+              <CardHeader>
+                <CardTitle className="flex items-center text-yellow-800 dark:text-yellow-200 font-bold">
+                  <Info className="mr-2" />
+                  Voting has not started yet!
+                </CardTitle>
+                <CardDescription className="dark:text-yellow-100">
+                  Voting will go live on{" "}
+                  <span className="font-semibold">
+                    {fromDate.toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                      timeZone: "Asia/Jakarta",
+                    })}
+                  </span>
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </main>
+      </PageContainer>
+    );
+  }
+  
+  // The date of the voting day completed (sudah selesai)
+  if (now > toDate) {
+    return (
+      <PageContainer scrollable={true}>
+        <main className="flex-1 p-8 overflow-auto">
+          <div className="max-w-6xl mx-auto">
+            {/* header */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-center">
+                  HIMATIF 2025 Election
+                </CardTitle>
+                <CardDescription className="text-center">
+                  Cast your vote for the next leader
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            {/* content */}
+            <Card className="bg-green-100 dark:bg-green-900">
+              <CardHeader>
+                <CardTitle className="flex items-center text-green-800 dark:text-green-200 font-bold">
+                  <Info className="mr-2" />
+                  Voting already finished!
+                </CardTitle>
+                <CardDescription className="dark:text-green-100">
+                  Voting completed on{" "}
+                  <span className="font-semibold">
+                    {toDate.toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                      timeZone: "Asia/Jakarta",
+                    })}
+                  </span>. Thank you for participating.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </main>
+      </PageContainer>
+    );
+  }
+
+  // If the user is not verified, it will render this ui
+  //   if (authStatus === "authenticated" && userStatus !== "Verified") {
+  //   return (
+  //       <PageContainer scrollable={true}>
+  //         <main className="flex-1 p-8 overflow-auto">
+  //           <div className="max-w-6xl mx-auto">
+  //             {/* Dialog Not Verified Status */}
+  //               <Dialog open={showNotVerifiedDialog} onOpenChange={setShowNotVerifiedDialog}>
+  //                 <DialogContent className="max-w-md">
+  //                   <DialogHeader>
+  //                     <DialogTitle>Account Not Verified</DialogTitle>
+  //                       <p className="text-sm text-gray-700 dark:text-gray-300">
+  //                         Your account is not verified. Please contact the admin to verify your account.
+  //                       </p>
+  //                   </DialogHeader>
+  //                   <DialogFooter>
+  //                     <Button onClick={() => setShowNotVerifiedDialog(false)} variant="secondary">
+  //                       Close
+  //                     </Button>
+  //                   </DialogFooter>
+  //                 </DialogContent>
+  //               </Dialog>
+  //             <Card className="bg-gray-100 dark:bg-gray-900">
+  //               <CardHeader>
+  //                 <CardTitle className="flex items-center text-gray-800 dark:text-gray-200 font-bold">
+  //                   <Info className="mr-2" />
+  //                   You are not allowed to vote
+  //                 </CardTitle>
+  //                 <CardDescription className="dark:text-red-100">
+  //                   Please{" "}
+  //                   <a 
+  //                   href={whatsappLink}
+  //                   target='_blank'
+  //                   rel="noopener noreferrer"
+  //                   className="text-primary underline-offset-4 hover:underline"
+  //                   >
+  //                     Contact Admin
+  //                   </a>{" "}
+  //                   to verify your account and then re-login to proceed with voting process.
+  //                 </CardDescription>
+  //               </CardHeader>
+  //             </Card>
+  //           </div>
+  //         </main>
+  //       </PageContainer>
+  //   )
+  // }
+
+    if (alreadyVote) {
+      return (
+        <PageContainer scrollable={true}>
+        <main className="flex-1 p-8 overflow-auto">
+          <div className="max-w-6xl mx-auto">
+            {/* header */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-center">
+                  HIMATIF 2025 Election
+                </CardTitle>
+                <CardDescription className="text-center">
+                  Cast your vote for the next leader
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            {/* content */}
+            <Card className="bg-green-100 dark:bg-green-900">
+              <CardHeader>
+                <CardTitle className="flex items-center text-green-800 dark:text-green-200 font-bold">
+                  <Vote className="mr-2" />
+                  You have already voted!
+                </CardTitle>
+                <CardDescription className="dark:text-green-100">
+                  Thank you for participating in the election.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </main>
+      </PageContainer>
+      )
+    }
+
   return (
     <PageContainer scrollable={true}>
       <main className="flex-1 p-8 overflow-auto">
@@ -130,8 +457,8 @@ export default function VoteVIewPage() {
         {!hasVoted && (
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold text-center">2024 National Election</CardTitle>
-              <CardDescription className="text-center">Cast your vote for the next leader</CardDescription>
+              <CardTitle className="text-2xl font-bold text-center">HIMATIF 2025 Election</CardTitle>
+              <CardDescription className="text-center">The Election is currently open! Cast your vote for the next leader</CardDescription>
             </CardHeader>
           </Card>
         )}
@@ -143,9 +470,26 @@ export default function VoteVIewPage() {
               <CardDescription>Select a candidate to cast your vote</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* <ScrollArea className="h-[600px] pr-4"> */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {candidates.map((candidate) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {isCandidatesLoading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <Card key={i} className="overflow-hidden">
+                      <Skeleton className="w-full h-48" />
+                      <CardHeader>
+                        <Skeleton className="h-4 w-1/2 mb-2" />
+                        <Skeleton className="h-3 w-1/3" />
+                      </CardHeader>
+                      <CardFooter>
+                        <Skeleton className="h-10 w-full rounded-md" />
+                      </CardFooter>
+                    </Card>
+                  ))
+                ) : candidates.length === 0 ? (
+                  <div className="col-span-full text-center text-gray-500 dark:text-gray-400">
+                    There are no candidates registered yet..
+                  </div>
+                ) : (
+                  candidates.map((candidate) => (
                     <Card key={candidate.id} className="overflow-hidden">
                       <Image
                         src={candidate.image}
@@ -164,9 +508,9 @@ export default function VoteVIewPage() {
                         </Button>
                       </CardFooter>
                     </Card>
-                  ))}
-                </div>
-              {/* </ScrollArea> */}
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
         ) : (      
@@ -219,7 +563,7 @@ export default function VoteVIewPage() {
 
               <div>
                 <h3 className="text-sm font-medium text-gray-500 dark:text-gray-300">Election</h3>
-                <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">2024 National Election</p>
+                <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">2025 General Election Himatif</p>
               </div>
             </div>
           </CardContent>
@@ -280,6 +624,32 @@ export default function VoteVIewPage() {
             </div>
           </div>
         )}
+
+        {/* Dialog Not Verified */}
+        <Dialog open={showNotVerifiedDialog} onOpenChange={setShowNotVerifiedDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Account Not Verified</DialogTitle>
+              <DialogDescription>
+                Your account is not verified. Please{" "}
+                <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-primary underline-offset-4 hover:underline"
+              >
+                Contact Admin
+              </a>{" "}
+                 to verify your account and re-login to continue.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button onClick={() => setShowNotVerifiedDialog(false)} variant="secondary">
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </PageContainer>
   );

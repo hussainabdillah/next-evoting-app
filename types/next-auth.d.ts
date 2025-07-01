@@ -20,6 +20,8 @@ declare module 'next-auth' {
       name: string
       email: string
       role: "user" | "admin" 
+      status: "Verified" | "Not Verified"
+      hasVoted: boolean
     }
   }
 
@@ -28,11 +30,15 @@ declare module 'next-auth' {
     name: string
     email: string
     role: "user" | "admin" 
+    status: "Verified" | "Not Verified"
+    hasVoted: boolean
   }
 
   interface JWT extends NextAuthJWT {
     id: string
     role: "user" | "admin"
+    status: "Verified" | "Not Verified"
+    hasVoted: boolean
   }
 }
 

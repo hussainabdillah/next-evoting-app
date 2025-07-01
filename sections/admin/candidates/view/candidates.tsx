@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
 import { MoreHorizontal, Pencil, Trash, Plus } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Candidate = {
   id: number;
@@ -54,8 +55,28 @@ export default function CandidatesManagementPage() {
     bio: '',
     votes: 0,
   })
+
+  const resetForm = () => {
+    setNewCandidate({
+      id: Date.now(),
+      name: '',
+      party: '',
+      image: '',
+      bio: '',
+      votes: 0,
+    });
+    setSelectedFile(null);
+  };
+
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+
+  // skeleton state
+  const [isLoading, setIsLoading] = useState(true)
+
+  // state file
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
 
   // Fetch candidates from API
   useEffect(() => {
@@ -63,38 +84,68 @@ export default function CandidatesManagementPage() {
   }, []);
 
   const fetchCandidates = async () => {
-    const res = await fetch('/api/candidates');
-    const data = await res.json();
-    setCandidates(data);
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/candidates');
+      const data = await res.json();
+      setCandidates(data);
+    } catch (error) {
+      console.error("Failed to fetch candidates", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleSaveCandidate = async () => {
-    if (editingCandidate) {
-      const res = await fetch(`/api/candidates/${editingCandidate.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingCandidate),
+    if (!editingCandidate?.name || !editingCandidate?.party || !editingCandidate?.bio) {
+      toast({
+        title: "Validation Error",
+        description: "Name, Party, and Bio fields are required.",
+        variant: "destructive",
       });
-  
-      if (res.ok) {
-        toast({
-          title: 'Candidate Updated',
-          description: `${editingCandidate.name}'s information has been updated.`,
-        });
-  
-        await fetchCandidates();
-        setIsEditDialogOpen(false);
-        setEditingCandidate(null);
-      } else {
-        toast({
-          title: 'Update Failed',
-          description: 'Failed to update candidate. Please try again.',
-          variant: 'destructive',
-        });
-      }
+      return;
     }
+
+    const formData = new FormData();
+    formData.append("name", editingCandidate.name);
+    formData.append("party", editingCandidate.party);
+    formData.append("bio", editingCandidate.bio);
+    if (selectedFile) {
+      formData.append("image", selectedFile);
+    }
+    
+    try {
+    const res = await fetch(`/api/candidates/${editingCandidate.id}`, {
+      method: "PUT",
+      body: formData,
+    });
+
+    if (res.ok) {
+      toast({
+        title: "Candidate Updated",
+        description: `${editingCandidate.name}'s information has been updated.`,
+      });
+      await fetchCandidates();
+      setIsEditDialogOpen(false);
+      setEditingCandidate(null);
+      setSelectedFile(null);
+    } else {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update candidate. Please try again.",
+        variant: "destructive",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    toast({
+      title: "Error",
+      description: "Something went wrong.",
+      variant: "destructive",
+    });
+  }
   };
   
 
@@ -117,18 +168,35 @@ export default function CandidatesManagementPage() {
       });
       return;
     }
+
+    if (!selectedFile) {
+    toast({
+      title: "Validation Error",
+      description: "Image is required.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+    const formData = new FormData();
+    formData.append("name", newCandidate.name);
+    formData.append("party", newCandidate.party);
+    formData.append("bio", newCandidate.bio);
+    formData.append("image", selectedFile);
   
     try {
       const res = await fetch('/api/candidates', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCandidate),
+        // headers: { 'Content-Type': 'application/json' },
+        // body: JSON.stringify(newCandidate),
+        body: formData
       });
   
       if (res.ok) {
         setIsAddDialogOpen(false)
         toast({ title: "Candidate Added", description: "New candidate has been successfully added." })
         setNewCandidate({ id: Date.now(), name: '', party: '', image: '', bio: '', votes: 0 });
+        setSelectedFile(null);
         fetchCandidates();
       } else {
         toast({
@@ -171,175 +239,145 @@ export default function CandidatesManagementPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Image</TableHead>
+                    <TableHead className="hidden md:table-cell">Image</TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead>Part</TableHead>
+                    <TableHead className="hidden md:table-cell">Party</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {candidates.map((candidate) => (
+                  {isLoading ? (
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell><Skeleton className="hidden md:table-cell w-[50px] h-[50px] rounded-full" /></TableCell>
+                        <TableCell><Skeleton className="w-24 h-4" /></TableCell>
+                        <TableCell><Skeleton className="hidden md:table-cell h-4 w-[80px]" /></TableCell>
+                        <TableCell className="flex gap-2">
+                          <Skeleton className="h-8 w-[60px]" />
+                          {/* <Skeleton className="h-8 w-[60px]" /> */}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    candidates.map((candidate) => (
                     <TableRow key={candidate.id}>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <Image
                           src={candidate.image}
                           alt={candidate.name}
                           width={50}
                           height={50}
-                          className="rounded-full object-cover"
+                          className="w-12 h-12 rounded-full object-cover"
                         />
                       </TableCell>
                       <TableCell>{candidate.name}</TableCell>
-                      <TableCell>{candidate.party}</TableCell>
+                      <TableCell className="hidden md:table-cell">{candidate.party}</TableCell>
                       <TableCell className="flex gap-2">
-                        <Dialog
-                          open={isEditDialogOpen}
-                          onOpenChange={setIsEditDialogOpen}
-                        >
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm" className="px-3"
-                              onClick={() => {
-                                setEditingCandidate(candidate);
-                                setIsEditDialogOpen(true);
-                              }}
-                            >
-                              <Pencil className="w-4 h-4 mr-1" />
-                              Edit
-                            </Button>
-                          </DialogTrigger>
-                          {editingCandidate && (
-                            <DialogContent className="max-w-md">
-                              <DialogHeader>
-                                <DialogTitle>Edit Candidate</DialogTitle>
-                                <DialogDescription>
-                                  Update candidate information below
-                                </DialogDescription>
-                              </DialogHeader>
-                              {editingCandidate && (
-                                <div className="grid gap-4 py-4">
-                                  <Input
-                                    placeholder="Name"
-                                    value={editingCandidate.name}
-                                    onChange={(e) =>
-                                      setEditingCandidate({
-                                        ...editingCandidate,
-                                        name: e.target.value
-                                      })
-                                    }
-                                  />
-                                  <Input
-                                    placeholder="Party"
-                                    value={editingCandidate.party}
-                                    onChange={(e) =>
-                                      setEditingCandidate({
-                                        ...editingCandidate,
-                                        party: e.target.value
-                                      })
-                                    }
-                                  />
-                                  <Input
-                                    placeholder="Image URL"
-                                    value={editingCandidate.image}
-                                    onChange={(e) =>
-                                      setEditingCandidate({
-                                        ...editingCandidate,
-                                        image: e.target.value
-                                      })
-                                    }
-                                  />
-                                  <Textarea
-                                    placeholder="Description"
-                                    value={editingCandidate.bio}
-                                    onChange={(e) =>
-                                      setEditingCandidate({
-                                        ...editingCandidate,
-                                        bio: e.target.value
-                                      })
-                                    }
-                                    rows={4}
-                                  />
-                                </div>
-                              )}
-                              <DialogFooter>
-                                <Button onClick={handleSaveCandidate}>
-                                  Save Changes
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => setIsEditDialogOpen(false)}
-                                >
-                                  Cancel
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          )}
-                        </Dialog>
-                        <Dialog
-                          open={
-                            isDeleteDialogOpen &&
-                            deletingCandidate?.id === candidate.id
-                          }
-                          onOpenChange={(open) => {
-                            setIsDeleteDialogOpen(open);
-                            if (!open) setDeletingCandidate(null);
+                        {/* Edit Button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="px-3"
+                          onClick={() => {
+                            setEditingCandidate(candidate);
+                            setIsEditDialogOpen(true);
                           }}
                         >
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="destructive"
-                              size="sm" className="px-3"
-                              onClick={() => {
-                                setDeletingCandidate(candidate);
-                                setIsDeleteDialogOpen(true);
-                              }}
-                            >
-                              <Trash className="w-4 h-4 mr-1" />
-                              Delete
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Confirm Delete</DialogTitle>
-                              <DialogDescription>
-                                Are you sure you want to delete{' '}
-                                <strong>{deletingCandidate?.name}</strong>? This
-                                action cannot be undone.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter>
-                              <Button
-                                variant="outline"
-                                onClick={() => {
-                                  setIsDeleteDialogOpen(false);
-                                  setDeletingCandidate(null);
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                onClick={() => {
-                                  if (deletingCandidate) {
-                                    handleDeleteCandidate(deletingCandidate.id);
-                                    setIsDeleteDialogOpen(false);
-                                    setDeletingCandidate(null);
-                                  }
-                                }}
-                              >
-                                Confirm Delete
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                          <Pencil className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                        {/* Delete Button */}
+                        <Button
+                          variant="destructive"
+                          size="sm" 
+                          className="px-3"
+                          onClick={() => {
+                            setDeletingCandidate(candidate);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash className="w-4 h-4 mr-1" />
+                          Delete
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
+
+          {/* Edit Dialog */}
+          {editingCandidate && (
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Edit Candidate</DialogTitle>
+                  <DialogDescription>
+                    Update candidate information below
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <Label htmlFor="name">
+                    Candidate Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="name"
+                    placeholder="Name"
+                    value={editingCandidate.name}
+                    onChange={(e) =>
+                      setEditingCandidate({ ...editingCandidate, name: e.target.value })
+                    }
+                  />
+                  <Label htmlFor="party">
+                    Candidate Party <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="party"
+                    placeholder="Party"
+                    value={editingCandidate.party}
+                    onChange={(e) =>
+                      setEditingCandidate({ ...editingCandidate, party: e.target.value })
+                    }
+                  />
+                  <Label htmlFor="picture">
+                    Image <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="picture"
+                    type="file"
+                    accept=".jpg, .jpeg, .png"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelectedFile(file);
+                        setEditingCandidate({ ...editingCandidate, image: e.target.value });
+                      }
+                    }}
+                  />
+                  <Label htmlFor="description">
+                    Description <span className="text-red-500">*</span>
+                  </Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Description"
+                    value={editingCandidate.bio}
+                    onChange={(e) =>
+                      setEditingCandidate({ ...editingCandidate, bio: e.target.value })
+                    }
+                    rows={4}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleSaveCandidate}>Save Changes</Button>
+                  <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
 
           {/* Add Dialog */}
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -349,30 +387,62 @@ export default function CandidatesManagementPage() {
                 <DialogDescription>Fill out the form to add a new candidate.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
+                <Label htmlFor="name">
+                  Candidate Name <span className="text-red-500">*</span>
+                </Label>
                 <Input
+                  id="name"
                   placeholder="Name"
                   value={newCandidate.name}
                   onChange={(e) => setNewCandidate({ ...newCandidate, name: e.target.value })}
                 />
+                <Label htmlFor="party">
+                  Candidate Party <span className="text-red-500">*</span>
+                </Label>
                 <Input
+                  id="party"
                   placeholder="Party"
                   value={newCandidate.party}
                   onChange={(e) => setNewCandidate({ ...newCandidate, party: e.target.value })}
                 />
+                <Label htmlFor="picture">
+                  Image <span className="text-red-500">*</span>
+                </Label>
                 <Input
+                  id="picture"
+                  accept=".jpg ,.jpeg, .png" 
+                  type="file"
                   placeholder="Image URL"
                   value={newCandidate.image}
-                  onChange={(e) => setNewCandidate({ ...newCandidate, image: e.target.value })}
+                  onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setSelectedFile(file);
+                    setNewCandidate({ ...newCandidate, image: e.target.value });
+                  }
+                }}
                 />
+                <Label htmlFor="description">
+                  Description <span className="text-red-500">*</span>
+                </Label>
                 <Textarea
-                  placeholder="Description"
+                  id="description"
+                  placeholder="Insert candidate description"
                   value={newCandidate.bio}
                   onChange={(e) => setNewCandidate({ ...newCandidate, bio: e.target.value })}
                   rows={4}
                 />
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                <Button 
+                variant="outline" 
+                onClick={() => {
+                  resetForm();
+                  setIsAddDialogOpen(false);
+                }}
+                >
+                  Cancel
+                </Button>
                 <Button
                   onClick={async() => {
                     // const candidateToAdd = { ...newCandidate, id: Date.now() }
@@ -382,6 +452,48 @@ export default function CandidatesManagementPage() {
                   }}
                 >
                   Add
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Dialog */}
+          <Dialog
+            open={isDeleteDialogOpen && deletingCandidate !== null}
+            onOpenChange={(open) => {
+              setIsDeleteDialogOpen(open);
+              if (!open) setDeletingCandidate(null);
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirm Delete</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete{" "}
+                  <strong>{deletingCandidate?.name}</strong>? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsDeleteDialogOpen(false);
+                    setDeletingCandidate(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (deletingCandidate) {
+                      handleDeleteCandidate(deletingCandidate.id);
+                      setIsDeleteDialogOpen(false);
+                      setDeletingCandidate(null);
+                    }
+                  }}
+                >
+                  Confirm Delete
                 </Button>
               </DialogFooter>
             </DialogContent>

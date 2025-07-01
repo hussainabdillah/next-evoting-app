@@ -1,7 +1,7 @@
 import { ResultsViewPage } from '@/sections/results/view';
 
 export const metadata = {
-  title: 'Dashboard : Results'
+  title: 'Evoting : Results'
 };
 
 export default function page() {

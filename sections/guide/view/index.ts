@@ -1,0 +1,1 @@
+export {default as GuideViewPage} from './voter-guide-view-page';

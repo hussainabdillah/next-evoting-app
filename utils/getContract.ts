@@ -29,6 +29,6 @@ export const getTotalVotesCast = async (): Promise<number> => {
   const provider = new ethers.BrowserProvider(window.ethereum);
   const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, await provider.getSigner());
 
-  const totalVotes: bigint = await contract.getTotalVotes(); // pastikan nama fungsinya sesuai
+  const totalVotes: bigint = await contract.getTotalVotesCast();
   return Number(totalVotes);
 };
