@@ -1,3 +1,5 @@
+"use client"
+import { useEffect, useState } from "react"
 import PageContainer from '@/components/layout/page-container';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,15 +12,44 @@ import {
 } from '@/components/ui/card';
 import Link from 'next/link'
 import { BarChart, Calendar, HelpCircle, Info, Users } from 'lucide-react'
+import ElectionCountdown from '../election-countdown'
+import { doc, getDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 export default function OverViewPage() {
+  // election date countdown
+  // const [electionEndDate, setElectionEndDate] = useState<Date | null>(null)
+  const [schedule, setSchedule] = useState<{ from: Date; to: Date } | null>(null)
+
+  useEffect(() => {
+    const fetchElection = async () => {
+      const docSnap = await getDoc(doc(db, "election", "settings"))
+      if (docSnap.exists()) {
+        const data = docSnap.data()
+        if (data?.schedule?.from && data?.schedule?.to) {
+          setSchedule({
+            from: new Date(data.schedule.from),
+            to: new Date(data.schedule.to),
+          })
+        }
+      }
+    }
+
+    fetchElection()
+  }, [])
+
+  // Set number admin for customer service
+  const adminNumber = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP;
+  const message = encodeURIComponent(`Hi Admin, I need help regarding the voting process.`);
+  const whatsappLink = `https://wa.me/${adminNumber}?text=${message}`;
+
   return (
     <PageContainer scrollable={true}>
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-4xl mx-auto">
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="text-3xl font-bold text-center">Welcome to the 2024 Informatics Student Election</CardTitle>
+              <CardTitle className="text-3xl font-bold text-center">Welcome to the 2025 General Election for HIMATIF</CardTitle>
               <CardDescription className="text-center text-lg">Your vote shapes our future. Make it count!</CardDescription>
             </CardHeader>
           </Card>
@@ -32,25 +63,16 @@ export default function OverViewPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p>The Informatics Student Election Election is a crucial moment for our program study. This year, we re using a secure e-voting decentralized system to make voting more accessible and efficient.</p>
+                <p>The Election for the Himatif Chairperson marks an important moment for our student association. This year, we are implementing a secure and decentralized e-voting system to enhance accessibility, transparency, and efficiency in the voting process.</p>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="mr-2" />
-                  Important Dates
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc list-inside space-y-2">
-                  <li>Voter Registration Deadline: July 1, 2024</li>
-                  <li>Early Voting Begins: October 15, 2024</li>
-                  <li>Election Day: November 5, 2024</li>
-                </ul>
-              </CardContent>
-            </Card>
+            <ElectionCountdown 
+                  schedule={schedule}
+                  title="Election Countdown"
+                  description="The Election is currently open! Make sure to read this guide before voting."
+                  linkText="View Voter Guide"
+                  linkUrl="/dashboard/voter-guide"
+                />
           </div>
 
           <Card className="mt-6">
@@ -68,7 +90,7 @@ export default function OverViewPage() {
             </CardContent>
             <CardFooter>
               <Button asChild className="w-full">
-                <Link href="/vote">
+                <Link href="/dashboard/vote">
                   Go to Voting Page
                 </Link>
               </Button>
@@ -88,7 +110,7 @@ export default function OverViewPage() {
               </CardContent>
               <CardFooter>
                 <Button asChild variant="outline" className="w-full">
-                  <Link href="/candidates">View Candidates</Link>
+                  <Link href="/dashboard/candidates">View Candidates</Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -105,7 +127,7 @@ export default function OverViewPage() {
               </CardContent>
               <CardFooter>
                 <Button asChild variant="outline" className="w-full">
-                  <Link href="/results">View Results</Link>
+                  <Link href="/dashboard/results">View Results</Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -122,7 +144,13 @@ export default function OverViewPage() {
               </CardContent>
               <CardFooter>
                 <Button asChild variant="outline" className="w-full">
-                  <Link href="/help">Get Help</Link>
+                  <Link
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Get Help
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>

@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma'; // sesuaikan dengan path prisma kamu
+import { prisma } from '@/lib/prisma';
 import bcrypt from "bcrypt";
 
 
-// GET
+// GET all users
 export async function GET() {
   try {
     const users = await prisma.user.findMany({
-      where: { role: 'user' }, // hanya user dengan role 'user'
+      where: { role: 'user' },
       select: {
         id: true,
         name: true,
@@ -25,7 +25,7 @@ export async function GET() {
   }
 }
 
-// POST
+// POST create a new user by admin
 export async function POST(request: Request) {
   try {
     const { name, email, password } = await request.json();
@@ -41,7 +41,8 @@ export async function POST(request: Request) {
         name,
         email,
         password: hashedPassword,
-        role: "user", // Default role
+        role: "user",
+        status: "Verified" // Default status user if created by admin
       },
     });
 

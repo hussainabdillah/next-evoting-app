@@ -1,15 +1,34 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['utfs.io', 'api.slingacademy.com'],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'utfs.io',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.slingacademy.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgur.com',
+        pathname: '/**',
+      },
       {
         protocol: 'https',
         hostname: 'avatar.iran.liara.run',
         pathname: '/**',
       },
-    ]
-  }
+      {
+        protocol: 'https',
+        hostname: 'idodjgjapyzunqygmnxm.supabase.co',
+        pathname: '/**',
+      }
+    ],
+  },
 };
 
 module.exports = nextConfig;

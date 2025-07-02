@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
+// PUT update user status vote by admin
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const { status } = await request.json();

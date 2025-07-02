@@ -21,7 +21,8 @@ export async function POST(req: Request) {
       name,
       email,
       password: hashedPassword,
-      role: 'user', // default role
+      role: 'user', // default role is user
+      status: 'Verified' // default is not verified, but for testing purpose make it verified
     },
   })
 
