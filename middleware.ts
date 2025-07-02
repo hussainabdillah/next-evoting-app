@@ -26,11 +26,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
 
+  // Jika user dan admin sudah mendapatkan session dan akses '/' maka akan diteruskan ke halaman utama
+  if (token && pathname === '/') {
+    if (token.role === 'admin') {
+      return NextResponse.redirect(new URL('/admin', request.url))
+    } else if (token.role === 'user') {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  }
+
   return NextResponse.next()
 }
 
 // Middleware aktif di path-path tertentu
 export const config = {
-  matcher: ['/admin/:path*', '/dashboard/:path*'],
+  matcher: ['/','/admin/:path*', '/dashboard/:path*'],
 }
 
