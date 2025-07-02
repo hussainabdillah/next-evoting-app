@@ -173,14 +173,50 @@ export default function VoteViewPage() {
 
       } catch (error: any) {
         console.error("Voting failed:", error);
-        const message =
-        error?.reason ||
-        error?.error?.message ||
-        error?.data?.message ||
-        "Voting failed. Please try again.";
+        // const message =
+        // error?.reason ||
+        // error?.error?.message ||
+        // error?.data?.message ||
+        // "Voting failed. Please try again.";
+        // toast({
+        //   title: "Voting failed",
+        //   description: message,
+        //   variant: "destructive",
+        // });
+        
+        // Handle specific error messages
+        let errorMessage = "Voting failed. Please try again.";
+        
+        // Check for MetaMask installation error
+        if (error?.message === "MetaMask is not installed") {
+          errorMessage = "MetaMask is not installed. Please install MetaMask extension to continue voting.";
+        }
+        // Check for user rejection
+        else if (error?.code === 4001 || error?.message?.includes("user rejected")) {
+          errorMessage = "Transaction was rejected. Please approve the transaction to vote.";
+        }
+        // Check for network errors
+        else if (error?.message?.includes("network")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        }
+        // Check for insufficient funds
+        else if (error?.message?.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds for gas fees. Please add ETH to your wallet.";
+        }
+        // Other specific blockchain errors
+        else if (error?.reason) {
+          errorMessage = error.reason;
+        }
+        else if (error?.error?.message) {
+          errorMessage = error.error.message;
+        }
+        else if (error?.data?.message) {
+          errorMessage = error.data.message;
+        }
+        
         toast({
           title: "Voting failed",
-          description: message,
+          description: errorMessage,
           variant: "destructive",
         });
       } finally {
