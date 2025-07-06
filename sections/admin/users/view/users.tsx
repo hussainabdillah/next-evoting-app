@@ -28,6 +28,18 @@ export default function UsersManagementPage() {
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  // State untuk validation input
+  const [formErrors, setFormErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+    submit?: string;
+  }>({});
+
+  // Tambahkan state untuk tracking submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Fetch users from API
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -44,6 +56,48 @@ export default function UsersManagementPage() {
     fetchUsers();
   }, []);
 
+  // validate email ums student
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const umsStudentRegex = /^[a-l]\d{9}@student\.ums\.ac\.id$/;
+    
+    if (!emailRegex.test(email)) {
+      return "Please enter a valid email address";
+    }
+    
+    if (!umsStudentRegex.test(email)) {
+      return "Your email is not a valid UMS student email.";
+    }
+    
+    return null;
+  };
+
+  // Tambahkan helper function untuk validasi NIM
+  const validateNIM = (email: string) => {
+    if (!email.includes('@')) return false;
+    
+    const nim = email.split('@')[0];
+    
+    // Cek panjang NIM (10 karakter)
+    if (nim.length !== 10) {
+      return false;
+    }
+    
+    // Cek karakter pertama (a-l)
+    const firstChar = nim[0].toLowerCase();
+    if (!/^[a-l]$/.test(firstChar)) {
+      return false;
+    }
+    
+    // Cek 9 karakter sisanya adalah angka
+    const numbers = nim.slice(1);
+    if (!/^\d{9}$/.test(numbers)) {
+      return false;
+    }
+    
+    return true;
+  };
+
   // add user
   const [newUser, setNewUser] = useState<{
     name: string;
@@ -52,14 +106,38 @@ export default function UsersManagementPage() {
   }>({ name: '', email: '', password: '' })
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
+  // handle add user
   const handleAddUser = async () => {
-    if (!newUser.name || !newUser.email || !newUser.password) {
-      toast({
-        title: "Validation Error",
-        description: "All fields are required.",
-        variant: "destructive",
-      });
-      return;
+    setIsSubmitting(true);
+    const errors: typeof formErrors = {};
+    
+    // Validasi semua field
+    if (!newUser.name.trim()) {
+      errors.name = "Name is required";
+    }
+    
+    if (!newUser.email.trim()) {
+      errors.email = "Email is required";
+    } else {
+      const emailError = validateEmail(newUser.email);
+      if (emailError) {
+        errors.email = emailError;
+      } else if (!validateNIM(newUser.email)) {
+        errors.email = "Student number must be 10 characters: first letter (a-l) + 9 digits";
+      }
+    }
+    
+    if (!newUser.password) {
+      errors.password = "Password is required";
+    } else if (newUser.password.length < 6) {
+      errors.password = "Password must be at least 6 characters long";
+    }
+    
+    // Set errors dan return jika ada
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setIsSubmitting(false);
+      return; // Form tetap terbuka dengan error messages
     }
   
     try {
@@ -72,26 +150,36 @@ export default function UsersManagementPage() {
       });
   
       if (!response.ok) {
-        throw new Error('Failed to add user');
+        const errorData = await response.json();
+        setFormErrors({ submit: errorData.error || 'Failed to add user' });
+        setIsSubmitting(false);
+        return;
       }
   
       const createdUser = await response.json();
       setUsers(prev => [...prev, createdUser]);
       setNewUser({ name: '', email: '', password: '' });
+      setFormErrors({});
+      
+      // ✅ Tutup dialog dan show success toast
       setIsAddDialogOpen(false);
-  
       toast({
         title: "Success",
-        description: `${createdUser.name} has been added.`,
+        description: `${createdUser.name} has been added successfully.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast({
-        title: "Error",
-        description: "Something went wrong while adding the user.",
-        variant: "destructive",
-      });
+      setFormErrors({ submit: error.message || "Something went wrong while adding the user." });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  // Function untuk reset form
+  const resetForm = () => {
+    setNewUser({ name: '', email: '', password: '' });
+    setFormErrors({});
+    setIsSubmitting(false);
   };
   
 
@@ -151,7 +239,12 @@ export default function UsersManagementPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Users List</CardTitle>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+                setIsAddDialogOpen(open);
+                if (!open) {
+                  resetForm();
+                }
+              }}>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
                     <DialogTitle>Add New User</DialogTitle>
@@ -165,10 +258,20 @@ export default function UsersManagementPage() {
                       <Input
                         id="name"
                         value={newUser.name}
-                        onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                        onChange={(e) => {
+                          setNewUser({ ...newUser, name: e.target.value });
+                          if (formErrors.name) {
+                            setFormErrors({ ...formErrors, name: undefined });
+                          }
+                        }}
                         placeholder="Enter full name"
+                        className={formErrors.name ? "border-red-500 focus:border-red-500" : ""}
                       />
+                      {formErrors.name && (
+                        <p className="text-sm text-red-500">{formErrors.name}</p>
+                      )}
                     </div>
+                    
                     <div className="grid gap-2">
                       <Label htmlFor="email">
                         Email <span className="text-red-500">*</span>
@@ -177,10 +280,25 @@ export default function UsersManagementPage() {
                         id="email"
                         type="email"
                         value={newUser.email}
-                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                        placeholder="Enter email address"
+                        onChange={(e) => {
+                          setNewUser({ ...newUser, email: e.target.value });
+                          if (formErrors.email) {
+                            setFormErrors({ ...formErrors, email: undefined });
+                          }
+                        }}
+                        placeholder="l200210000@student.ums.ac.id"
+                        className={formErrors.email ? "border-red-500 focus:border-red-500" : ""}
                       />
+                      {formErrors.email && (
+                        <p className="text-sm text-red-500">{formErrors.email}</p>
+                      )}
+                      {/* <div className="text-xs text-gray-500 space-y-1">
+                        <p>Format: [letter][9 digits]@student.ums.ac.id</p>
+                        <p>• First letter: a-l (e.g., a, b, c, ..., l)</p>
+                        <p>• Example: l200214201@student.ums.ac.id</p>
+                      </div> */}
                     </div>
+                    
                     <div className="grid gap-2">
                       <Label htmlFor="password">
                         Password <span className="text-red-500">*</span>
@@ -189,14 +307,40 @@ export default function UsersManagementPage() {
                         id="password"
                         type="password"
                         value={newUser.password}
-                        onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                        placeholder="Enter password"
+                        onChange={(e) => {
+                          setNewUser({ ...newUser, password: e.target.value });
+                          if (formErrors.password) {
+                            setFormErrors({ ...formErrors, password: undefined });
+                          }
+                        }}
+                        placeholder="Minimum 6 characters"
+                        className={formErrors.password ? "border-red-500 focus:border-red-500" : ""}
                       />
+                      {formErrors.password && (
+                        <p className="text-sm text-red-500">{formErrors.password}</p>
+                      )}
                     </div>
+                    {/* General submit error */}
+                    {formErrors.submit && (
+                      <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                        <p className="text-sm text-red-600">{formErrors.submit}</p>
+                      </div>
+                    )}
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleAddUser}>Add User</Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsAddDialogOpen(false)}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                    onClick={handleAddUser}
+                    disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Adding..." : "Add User"}
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
