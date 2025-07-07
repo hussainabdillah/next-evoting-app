@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from "bcrypt";
 
@@ -44,11 +44,35 @@ const validateUMSEmail = (email: string): { isValid: boolean; error?: string } =
   return { isValid: true };
 };
 
-// GET all users
-export async function GET() {
+// GET all users with pagination and search
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const search = searchParams.get('search') || '';
+
+    const skip = (page - 1) * limit;
+
+    // Build where clause for search
+    const whereClause = {
+      role: 'user',
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { email: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }),
+    };
+
+    // Get total count for pagination
+    const totalUsers = await prisma.user.count({
+      where: whereClause,
+    });
+
+    // Get users with pagination
     const users = await prisma.user.findMany({
-      where: { role: 'user' },
+      where: whereClause,
       select: {
         id: true,
         name: true,
@@ -57,9 +81,21 @@ export async function GET() {
         walletAddress: true,
         status: true,
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip,
+      take: limit,
     });
 
-    return NextResponse.json(users);
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    return NextResponse.json({
+      users,
+      totalUsers,
+      totalPages,
+      currentPage: page,
+    });
   } catch (error) {
     console.error('Failed to fetch users:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
