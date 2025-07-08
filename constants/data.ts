@@ -145,6 +145,12 @@ export const userNavItems: NavItem[] = [
     href: '/dashboard/results',
     icon: 'result',
     label: 'results'
+  },
+  {
+    title: 'History',
+    href: '/dashboard/history',
+    icon: 'history',
+    label: 'history'
   }
 ];
 
