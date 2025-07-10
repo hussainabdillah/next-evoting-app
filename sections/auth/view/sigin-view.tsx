@@ -20,21 +20,27 @@ export const metadata: Metadata = {
 };
 
 export default function SignInViewPage() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const [loginEmail, setLoginEmail] = useState('')
-  const [loginPassword, setLoginPassword] = useState('')
-  const [signupName, setSignupName] = useState('')
-  const [signupEmail, setSignupEmail] = useState('')
-  const [signupPassword, setSignupPassword] = useState('')
-  const [signupConfirmPassword, setSignupConfirmPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [showLoginPassword, setShowLoginPassword] = useState(false)
-  const [showSignupPassword, setShowSignupPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [signupName, setSignupName] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-
-
+  // Error state for signup fields
+  const [signupErrors, setSignupErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    submit?: string;
+  }>({});
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,11 +57,23 @@ export default function SignInViewPage() {
         const data = await res.json()
         const role = data?.user?.role
   
-        toast({ title: "Login Successful", description: "Welcome back!" })
+        toast({ title: "Login Successful", description: "Welcome to Evoting chain!" })
   
         router.push(role === 'admin' ? '/admin' : '/dashboard')
       } else {
-        toast({ title: "Login Failed", description: "Invalid credentials", variant: "destructive" })
+        // check if the error is related to email verification
+        if (result?.error === 'Please verify your email before logging in.') {
+          toast({
+            title: "Email Not Verified",
+            description: "Please verify your email before logging in.",
+            variant: "destructive"
+          })
+        } else {
+          toast({ title: "Login Failed", 
+            description: "Invalid credentials. Please try again.", 
+            variant: "destructive"
+          })
+        }
       }
     } catch (error) {
       toast({ title: "Login Error", description: "Something went wrong", variant: "destructive" })
@@ -64,18 +82,41 @@ export default function SignInViewPage() {
     }
   }
   
+  // Helper for UMS student email
+  const isValidUMSStudentEmail = (email: string) => {
+    const regex = /^[a-l]\d{9}@student\.ums\.ac\.id$/;
+    return regex.test(email);
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (signupPassword !== signupConfirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "The passwords you entered do not match.",
-        variant: "destructive",
-      })
-      return
+    e.preventDefault();
+    const errors: typeof signupErrors = {};
+
+    if (!signupName.trim()) {
+      errors.name = "Name is required";
     }
-  
-    setIsLoading(true)
+    if (!signupEmail.trim()) {
+      errors.email = "Email is required";
+    } else if (!isValidUMSStudentEmail(signupEmail)) {
+      errors.email = "Email must be a valid UMS student email (e.g. l200210200@student.ums.ac.id)";
+    }
+    if (!signupPassword) {
+      errors.password = "Password is required";
+    } else if (signupPassword.length < 6) {
+      errors.password = "Password must be at least 6 characters.";
+    }
+    if (!signupConfirmPassword) {
+      errors.confirmPassword = "Please confirm your password.";
+    } else if (signupPassword !== signupConfirmPassword) {
+      errors.confirmPassword = "Passwords do not match.";
+    }
+
+    setSignupErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -85,28 +126,30 @@ export default function SignInViewPage() {
           email: signupEmail,
           password: signupPassword
         })
-      })
-  
-      const data = await res.json()
-  
+      });
+
+      const data = await res.json();
+
       if (res.ok) {
         toast({
-          title: "Signup Successful",
-          description: "You can now log in.",
-        })
+          title: 'Signup Successful',
+          description: 'We have sent a verification email. Please verify your email to complete the signup process.',
+        });
+        setSignupErrors({});
       } else {
-        throw new Error(data.message || 'Signup failed')
+        setSignupErrors({ submit: data.message || 'Signup failed' });
+        throw new Error(data.message || 'Signup failed');
       }
     } catch (error: any) {
       toast({
         title: "Signup Error",
         description: error.message,
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
   
 
   return (
@@ -183,15 +226,23 @@ export default function SignInViewPage() {
               <TabsContent value="signup">
                 <form onSubmit={handleSignup}>
                   <div className="space-y-4">
+
                     <div className="space-y-2">
                       <Label htmlFor="signup-name">Full Name</Label>
                       <Input
                         id="signup-name"
                         placeholder="Your name"
                         value={signupName}
-                        onChange={(e) => setSignupName(e.target.value)}
+                        onChange={(e) => {
+                          setSignupName(e.target.value);
+                          if (signupErrors.name) setSignupErrors({ ...signupErrors, name: undefined });
+                        }}
                         required
+                        className={signupErrors.name ? "border-red-500 focus:border-red-500" : ""}
                       />
+                      {signupErrors.name && (
+                        <p className="text-sm text-red-500">{signupErrors.name}</p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -202,12 +253,18 @@ export default function SignInViewPage() {
                           id="signup-email"
                           placeholder="Enter your email"
                           type="email"
-                          className="pl-8"
+                          className={`pl-8 ${signupErrors.email ? "border-red-500 focus:border-red-500" : ""}`}
                           value={signupEmail}
-                          onChange={(e) => setSignupEmail(e.target.value)}
+                          onChange={(e) => {
+                            setSignupEmail(e.target.value);
+                            if (signupErrors.email) setSignupErrors({ ...signupErrors, email: undefined });
+                          }}
                           required
                         />
                       </div>
+                      {signupErrors.email && (
+                        <p className="text-sm text-red-500">{signupErrors.email}</p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -218,9 +275,12 @@ export default function SignInViewPage() {
                           id="signup-password"
                           placeholder='Create new password'
                           type={showSignupPassword ? "text" : "password"}
-                          className="pl-8 pr-8"
+                          className={`pl-8 pr-8 ${signupErrors.password ? "border-red-500 focus:border-red-500" : ""}`}
                           value={signupPassword}
-                          onChange={(e) => setSignupPassword(e.target.value)}
+                          onChange={(e) => {
+                            setSignupPassword(e.target.value);
+                            if (signupErrors.password) setSignupErrors({ ...signupErrors, password: undefined });
+                          }}
                           required
                         />
                         <button
@@ -231,6 +291,9 @@ export default function SignInViewPage() {
                           {showSignupPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
+                      {signupErrors.password && (
+                        <p className="text-sm text-red-500">{signupErrors.password}</p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -241,9 +304,12 @@ export default function SignInViewPage() {
                           id="signup-confirm-password"
                           placeholder='Confirm your password'
                           type={showConfirmPassword ? "text" : "password"}
-                          className="pl-8 pr-8"
+                          className={`pl-8 pr-8 ${signupErrors.confirmPassword ? "border-red-500 focus:border-red-500" : ""}`}
                           value={signupConfirmPassword}
-                          onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                          onChange={(e) => {
+                            setSignupConfirmPassword(e.target.value);
+                            if (signupErrors.confirmPassword) setSignupErrors({ ...signupErrors, confirmPassword: undefined });
+                          }}
                           required
                         />
                         <button
@@ -254,7 +320,17 @@ export default function SignInViewPage() {
                           {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
+                      {signupErrors.confirmPassword && (
+                        <p className="text-sm text-red-500">{signupErrors.confirmPassword}</p>
+                      )}
                     </div>
+
+                    {/* General submit error */}
+                    {signupErrors.submit && (
+                      <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                        <p className="text-sm text-red-600">{signupErrors.submit}</p>
+                      </div>
+                    )}
 
                     <Button type="submit" className="w-full">Sign Up</Button>
                   </div>
