@@ -67,6 +67,14 @@ export default function VoterVerification() {
     useState<VerificationResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // set number for contact
+  // Set number admin for customer service
+  const adminNumber = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP;
+  const message = encodeURIComponent(
+    `Hi Admin, I need help regarding the verification process.`
+  );
+  const whatsappLink = `https://wa.me/${adminNumber}?text=${message}`;
+
   // state to scan QR code
   const [qrError, setQrError] = useState<string | null>(null);
   const [isQrScanning, setIsQrScanning] = useState(false);
@@ -154,17 +162,64 @@ export default function VoterVerification() {
   //   }
   // };
 
-  // Handler untuk post data verify face
+  // Helper: AES encrypt base64 string (returns base64 ciphertext)
+  async function encryptAES(
+    plainText: string,
+    keyHex: string,
+    ivHex: string
+  ): Promise<string> {
+    const enc = new TextEncoder();
+    const keyBytes = new Uint8Array(hexToBytes(keyHex));
+    const ivBytes = new Uint8Array(hexToBytes(ivHex));
+    const key = await window.crypto.subtle.importKey(
+      'raw',
+      keyBytes as BufferSource,
+      { name: 'AES-CBC' },
+      false,
+      ['encrypt']
+    );
+    const encrypted = await window.crypto.subtle.encrypt(
+      { name: 'AES-CBC', iv: ivBytes as BufferSource },
+      key,
+      enc.encode(plainText)
+    );
+    // Avoid spread operator for Uint8Array for compatibility
+    const uint8 = new Uint8Array(encrypted);
+    let binary = '';
+    for (let i = 0; i < uint8.length; i++) {
+      binary += String.fromCharCode(uint8[i]);
+    }
+    return btoa(binary);
+  }
+
+  // Helper: hex string to Uint8Array
+  function hexToBytes(hex: string): number[] {
+    if (!hex) return [];
+    const arr = [];
+    for (let i = 0; i < hex.length; i += 2) {
+      arr.push(parseInt(hex.slice(i, i + 2), 16));
+    }
+    return arr;
+  }
+
+  // Handler untuk post data verify face (encrypted)
   const verifyFace = async (ktmPhoto: string, selfieImage: string) => {
+    // Kunci dan IV harus sama dengan backend (bisa dari env public, atau hardcode untuk demo/dev)
+    const keyHex = process.env.NEXT_PUBLIC_FACE_ENCRYPT_KEY || '';
+    const ivHex = process.env.NEXT_PUBLIC_FACE_ENCRYPT_IV || '';
+    if (!keyHex || !ivHex) {
+      throw new Error('Encryption key/iv not set');
+    }
+    const ktmPhotoEnc = await encryptAES(ktmPhoto, keyHex, ivHex);
+    const selfieImageEnc = await encryptAES(selfieImage, keyHex, ivHex);
     const res = await fetch('/api/verification/face-verification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ktmPhoto, selfieImage })
+      body: JSON.stringify({ ktmPhotoEnc, selfieImageEnc })
     });
     return await res.json();
   };
 
-  // Handler untuk submit dan face match (simulasi)
   // Handler untuk submit dan face match (panggil API AWS Rekognition)
   const handleFaceMatch = async () => {
     setCurrentStep('processing');
@@ -262,8 +317,10 @@ export default function VoterVerification() {
                       // Email format: l200214201@student.ums.ac.id
                       const email: string = data.email || '';
                       const emailNimMatch = email.match(/(l\d{9})/i);
-                      const emailNim = emailNimMatch ? emailNimMatch[0].toUpperCase() : '';
-                      
+                      const emailNim = emailNimMatch
+                        ? emailNimMatch[0].toUpperCase()
+                        : '';
+
                       if (emailNim && nim.toUpperCase() === emailNim) {
                         setScannedNIM(nim);
                         setCurrentStep('ktm-photo');
@@ -276,10 +333,13 @@ export default function VoterVerification() {
                         });
                       } else {
                         html5QrCode.stop();
-                        setQrError('NIM pada QR tidak cocok dengan NIM pada email login.');
+                        setQrError(
+                          'NIM pada QR tidak cocok dengan NIM pada email login.'
+                        );
                         toast({
                           title: 'NIM Tidak Cocok',
-                          description: 'NIM pada QR tidak cocok dengan NIM pada email login Anda.',
+                          description:
+                            'NIM pada QR tidak cocok dengan NIM pada email login Anda.',
                           variant: 'destructive'
                         });
                         setCurrentStep('initial');
@@ -1010,7 +1070,13 @@ export default function VoterVerification() {
                 <p>• Contact support if you encounter technical issues</p>
               </div>
               <Button variant="outline" className="mt-4" asChild>
-                <Link href="/help">Contact Support</Link>
+                <Link
+                  href={whatsappLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Contact Support
+                </Link>
               </Button>
             </CardContent>
           </Card>
