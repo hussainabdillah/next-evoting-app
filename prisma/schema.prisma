@@ -67,3 +67,10 @@ model Candidate {
   image  String
   bio    String
 }
+
+model EligibleVoter {
+  id      Int    @id @default(autoincrement())
+  nim     String @unique
+  name    String
+  faculty String
+}

@@ -115,65 +115,66 @@ export default function ElectionManagementPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-
-  // const onSubmit = async (data: z.infer<typeof FormSchema>) => {
-  //   await setDoc(doc(db, "election", "settings"), {
-  //     isElectionActive: data.isElectionActive,
-  //     schedule: {
-  //       from: data.schedule.from.toISOString(),
-  //       to: data.schedule.to.toISOString(),
-  //     },
-  //   })
-
-  //   toast({
-  //     title: "Election settings applied",
-  //     description: "Election settings have been updated successfully.",
-  //   })
-  // }
-
+  // Handler untuk submit form tanpa validation cek
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
-    try {
-      // Manual validation check (optional - schema sudah handle ini)
-      if (data.schedule.from >= data.schedule.to) {
-        toast({
-          title: "Invalid Schedule",
-          description: "End date and time must be after start date and time.",
-          variant: "destructive",
-        })
-        return
-      }
+    await setDoc(doc(db, "election", "settings"), {
+      isElectionActive: data.isElectionActive,
+      schedule: {
+        from: data.schedule.from.toISOString(),
+        to: data.schedule.to.toISOString(),
+      },
+    })
 
-      // Check if dates are in the past
-      if (data.schedule.from < new Date()) {
-        toast({
-          title: "Invalid Start Date",
-          description: "Start date cannot be in the past.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      await setDoc(doc(db, "election", "settings"), {
-        isElectionActive: data.isElectionActive,
-        schedule: {
-          from: data.schedule.from.toISOString(),
-          to: data.schedule.to.toISOString(),
-        },
-      })
-
-      toast({
-        title: "Election settings applied",
-        description: "Election settings have been updated successfully.",
-      })
-    } catch (error) {
-      console.error("Error updating election settings:", error)
-      toast({
-        title: "Error",
-        description: "Failed to update election settings. Please try again.",
-        variant: "destructive",
-      })
-    }
+    toast({
+      title: "Election settings applied",
+      description: "Election settings have been updated successfully.",
+    })
   }
+
+  // implementasi untuk validation check
+  // const onSubmit = async (data: z.infer<typeof FormSchema>) => {
+  //   try {
+  //     // Manual validation check (optional - schema sudah handle ini)
+  //     if (data.schedule.from >= data.schedule.to) {
+  //       toast({
+  //         title: "Invalid Schedule",
+  //         description: "End date and time must be after start date and time.",
+  //         variant: "destructive",
+  //       })
+  //       return
+  //     }
+
+  //     // Check if dates are in the past
+  //     if (data.schedule.from < new Date()) {
+  //       toast({
+  //         title: "Invalid Start Date",
+  //         description: "Start date cannot be in the past.",
+  //         variant: "destructive",
+  //       })
+  //       return
+  //     }
+
+  //     await setDoc(doc(db, "election", "settings"), {
+  //       isElectionActive: data.isElectionActive,
+  //       schedule: {
+  //         from: data.schedule.from.toISOString(),
+  //         to: data.schedule.to.toISOString(),
+  //       },
+  //     })
+
+  //     toast({
+  //       title: "Election settings applied",
+  //       description: "Election settings have been updated successfully.",
+  //     })
+  //   } catch (error) {
+  //     console.error("Error updating election settings:", error)
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to update election settings. Please try again.",
+  //       variant: "destructive",
+  //     })
+  //   }
+  // }
 
     // Handler untuk AlertDialog confirmation dengan error handling
     const handleConfirmSubmit = async () => {

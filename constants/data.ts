@@ -129,6 +129,12 @@ export const userNavItems: NavItem[] = [
     label: 'Dashboard'
   },
   {
+    title: 'Verification',
+    href: '/dashboard/verification',
+    icon: 'badgeCheck',
+    label: 'verification'
+  },
+  {
     title: 'Candidates',
     href: '/dashboard/candidates',
     icon: 'user',

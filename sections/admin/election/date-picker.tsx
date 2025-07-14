@@ -32,11 +32,15 @@ export function DateTimePicker({
   id
 }: DateTimePickerProps) {
   const [open, setOpen] = React.useState(false)
-  const [time, setTime] = React.useState(value ? format(value, "HH:mm") : "10:00")
+  // Prevent RangeError: Invalid time value
+  function isValidDate(d: any): d is Date {
+    return d instanceof Date && !isNaN(d.getTime());
+  }
+  const [time, setTime] = React.useState(isValidDate(value) ? format(value, "HH:mm") : "10:00")
 
   // Update time when value changes externally
   React.useEffect(() => {
-    if (value) {
+    if (isValidDate(value)) {
       setTime(format(value, "HH:mm"))
     }
   }, [value])
@@ -79,7 +83,7 @@ export function DateTimePicker({
             >
               <div className="flex items-center">
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {value ? format(value, "MMM dd, yyyy") : placeholder}
+                {isValidDate(value) ? format(value, "MMM dd, yyyy") : placeholder}
               </div>
               <ChevronDownIcon className="h-4 w-4 opacity-50" />
             </Button>
