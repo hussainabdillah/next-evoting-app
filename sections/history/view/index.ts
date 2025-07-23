@@ -1,0 +1,1 @@
+export { default as HistoryViewPage } from './election-history-view-page';

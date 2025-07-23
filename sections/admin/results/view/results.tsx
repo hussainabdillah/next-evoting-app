@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress"
 import { getVotesForCandidate } from "@/utils/getContract";
 import { Skeleton } from "@/components/ui/skeleton"
+import { Breadcrumbs } from '@/components/breadcrumbs';
 
 type Candidate = {
   id: number;
@@ -22,6 +23,12 @@ export default function ElectionResultsPage() {
 
   const [isLoading, setIsLoading] = useState(true)
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { title: 'Dashboard', link: '/admin' },
+    { title: 'Election Results', link: '/admin/results' },
+  ];
 
   // Fetch candidates from API
     useEffect(() => {
@@ -58,13 +65,19 @@ export default function ElectionResultsPage() {
 
   return (
     <PageContainer scrollable={true}>
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">Election Results</h1>
-
-          <Card>
+      <div className="space-y-4">
+      <Breadcrumbs items={breadcrumbItems} />
+      <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Election Results</h1>
+            <p className="text-sm text-muted-foreground">
+              View the results of the current election.
+            </p>
+          </div>
+        </div>
+        <Card>
             <CardHeader>
-              <CardTitle>Results Summary</CardTitle>
+              {/* <CardTitle>Results Summary</CardTitle> */}
             </CardHeader>
             <CardContent>
               <Table>
@@ -135,8 +148,7 @@ export default function ElectionResultsPage() {
               </Table>
             </CardContent>
           </Card>
-        </div>
-      </main>
+      </div>
     </PageContainer>
   )
 }

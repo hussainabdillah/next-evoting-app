@@ -1,0 +1,1 @@
+export { default as VerificationViewPage } from './verification-view-page';

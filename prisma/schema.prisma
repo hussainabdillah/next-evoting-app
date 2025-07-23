@@ -27,6 +27,8 @@ model User {
   walletAddress  String?
   status         String   @default("Not Verified")
   hasVoted       Boolean  @default(false)
+  verificationToken String?
+  verificationTokenExpiry DateTime?
 }
 
 model Account {
@@ -64,4 +66,11 @@ model Candidate {
   party  String
   image  String
   bio    String
+}
+
+model EligibleVoter {
+  id      Int    @id @default(autoincrement())
+  nim     String @unique
+  name    String
+  faculty String
 }

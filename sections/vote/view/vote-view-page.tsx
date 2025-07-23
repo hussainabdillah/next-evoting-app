@@ -44,9 +44,9 @@ export default function VoteViewPage() {
   const [toDate, setToDate] = useState<Date | null>(null)
   const [loadingVoteDate, setLoadingVoteDate] = useState(true)
 
-  //cek status user menggunakan useSession
-  const { data: session, status: authStatus } = useSession()
-  const userStatus = session?.user?.status 
+  // Status user dari API (selalu fresh)
+  const [userStatus, setUserStatus] = useState<string>('')
+  const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading')
   const [showNotVerifiedDialog, setShowNotVerifiedDialog] = useState(false)
 
   // contact admin
@@ -55,12 +55,29 @@ export default function VoteViewPage() {
   const message = encodeURIComponent(`Hi Admin, I need help regarding the verification of voting process.`);
   const whatsappLink = `https://wa.me/${adminNumber}?text=${message}`;
 
-  // fetch data user session dan cek apakah user sudah verifikasi atau belum
+
+  // Fetch status user terbaru dari API
   useEffect(() => {
-    if (authStatus === "authenticated" && userStatus == "Not Verified") {
-      setShowNotVerifiedDialog(true)
+    const fetchUserStatus = async () => {
+      setAuthStatus('loading')
+      try {
+        const res = await fetch('/api/user/status')
+        if (!res.ok) {
+          setAuthStatus('unauthenticated')
+          return
+        }
+        const data = await res.json()
+        setUserStatus(data.status)
+        setAuthStatus('authenticated')
+        if (data.status === 'Not Verified') {
+          setShowNotVerifiedDialog(true)
+        }
+      } catch {
+        setAuthStatus('unauthenticated')
+      }
     }
-  }, [authStatus, userStatus])
+    fetchUserStatus()
+  }, [])
 
 
   useEffect(() => {
@@ -124,7 +141,6 @@ export default function VoteViewPage() {
       setShowNotVerifiedDialog(true);
       return; // stop proses vote
     }
-
     setSelectedCandidate(candidate)
     setShowConfirmation(true)
   }
@@ -146,6 +162,10 @@ export default function VoteViewPage() {
         // then save tx hash to state
         setTransactionId(tx.hash); // save tx hash as transaction ID
 
+        // save to local storage
+        // localStorage.setItem('transactionId', tx.hash);
+        // localStorage.setItem('timestamp', new Date().toISOString());
+
         // update: call api for changing to has voted on database
         const res = await fetch('/api/vote', {
           method: 'POST',
@@ -164,6 +184,15 @@ export default function VoteViewPage() {
         ));
         setHasVoted(true);
 
+        // Refresh status user setelah voting (agar status hasVoted langsung update)
+        try {
+          const statusRes = await fetch('/api/user/status')
+          if (statusRes.ok) {
+            const statusData = await statusRes.json()
+            setUserStatus(statusData.status)
+          }
+        } catch {}
+
         // then show toast for succes and finish voting
         toast({
           title: 'Vote successful',
@@ -172,15 +201,32 @@ export default function VoteViewPage() {
         });
 
       } catch (error: any) {
-        console.error("Voting failed:", error);
-        const message =
-        error?.reason ||
-        error?.error?.message ||
-        error?.data?.message ||
-        "Voting failed. Please try again.";
+        // ...existing code...
+        let errorMessage = "Voting failed. Please try again.";
+        if (error?.message === "MetaMask is not installed") {
+          errorMessage = "MetaMask is not installed. Please install MetaMask extension to continue voting.";
+        }
+        else if (error?.code === 4001 || error?.message?.includes("user rejected")) {
+          errorMessage = "Transaction was rejected. Please approve the transaction to vote.";
+        }
+        else if (error?.message?.includes("network")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        }
+        else if (error?.message?.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds for gas fees. Please add ETH to your wallet.";
+        }
+        else if (error?.reason) {
+          errorMessage = error.reason;
+        }
+        else if (error?.error?.message) {
+          errorMessage = error.error.message;
+        }
+        else if (error?.data?.message) {
+          errorMessage = error.data.message;
+        }
         toast({
           title: "Voting failed",
-          description: message,
+          description: errorMessage,
           variant: "destructive",
         });
       } finally {
@@ -192,7 +238,7 @@ export default function VoteViewPage() {
   // fetching if user has voted or no 
     useEffect(() => {
       const fetchVoteStatus = async () => {
-        const res = await fetch('/api/user/vote-status');
+        const res = await fetch('/api/user/status');
         const data = await res.json();
         setAlreadyVote(data.hasVoted); // true / false dari backend
       };
@@ -214,6 +260,23 @@ export default function VoteViewPage() {
       }
       fetchVotingDates()
     }, [])
+    
+    // // load dari local storage
+    // useEffect(() => {
+    //   const savedTxHash = localStorage.getItem('transactionId');
+    //   const savedTimestamp = localStorage.getItem('timestamp');
+
+    //   if (savedTxHash) {
+    //     setTransactionId(savedTxHash);
+    //     setHasVoted(true);
+    //   }
+      
+    //   if (savedTimestamp) {
+    //     const formattedTimestamp = new Date(savedTimestamp).toLocaleString();
+    //     setTimestamp(formattedTimestamp);
+    //   }
+      
+    // }, [alreadyVote]);
     
     // if (authStatus === "loading") {
     //     return (
@@ -444,6 +507,89 @@ export default function VoteViewPage() {
                 </CardDescription>
               </CardHeader>
             </Card>
+            {/* Receipt
+            <div className="max-w-md mx-auto mt-8">
+              <Card className="border-green-200 dark:border-green-800 shadow-lg">
+                <CardHeader className="text-center bg-green-50 dark:bg-green-900 rounded-t-lg border-b border-green-100 dark:border-green-800">
+                  <div className="mx-auto mb-4 bg-green-100 dark:bg-green-800 p-3 rounded-full inline-flex">
+                    <CheckCircle className="h-12 w-12 text-green-600" />
+                  </div>
+                  <CardTitle className="text-2xl font-bold text-green-700 dark:text-green-300">
+                    Vote Successfully Cast!
+                  </CardTitle>
+                  <CardDescription className="text-green-600 dark:text-green-400">
+                    Your vote has been securely recorded
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="pt-6 space-y-6">
+                  <Alert className="bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="dark:text-green-300">Thank you for participating</AlertTitle>
+                    <AlertDescription className="dark:text-green-400">
+                      Your vote has been anonymously and securely recorded in our system.
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-300">Transaction ID</h3>
+                      <div className="mt-1 flex items-center">
+                        <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm font-mono flex-1 text-gray-800 dark:text-gray-100">
+                        {transactionId.slice(0, 6)}...{transactionId.slice(-4)}
+                        </code>
+                        <Button variant="ghost" size="icon" onClick={() => {
+                                navigator.clipboard.writeText(transactionId)
+                                toast({ title: "Copied", description: "Transaction ID copied." })
+                              }} 
+                            className="ml-2">
+                          <Copy className="h-4 w-4" />
+                          <span className="sr-only">Copy Transaction ID</span>
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-300">Timestamp</h3>
+                      <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{timestamp}</p>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-300">Election</h3>
+                      <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">2025 General Election Himatif</p>
+                    </div>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="flex flex-col space-y-3">
+                  <div className="grid grid-cols-2 gap-3 w-full">
+                  <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => window.open(`https://sepolia.etherscan.io/tx/${transactionId}`, '_blank')}
+                    >
+                      <View className="h-4 w-4 mr-2" />
+                      View Detail
+                  </Button>
+                  <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        const url = `https://sepolia.etherscan.io/tx/${transactionId}`
+                        navigator.clipboard.writeText(url)
+                        toast({
+                          title: "Share Link Generated",
+                          description: "A link to verify your participation has been copied to clipboard.",
+                        })
+                      }}
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share Receipt
+                    </Button>
+                  </div>
+                </CardFooter>
+              </Card>
+            </div> */}
           </div>
         </main>
       </PageContainer>
