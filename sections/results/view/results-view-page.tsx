@@ -34,6 +34,7 @@ export default function ResultsViewPage() {
     // fetch result from blockchain
     const [candidates, setCandidates] = useState<Candidate[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    // const [hasVoted, setHasVoted] = useState(false);
 
     // Fetch candidates from API
       useEffect(() => {

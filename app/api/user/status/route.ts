@@ -13,8 +13,15 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { hasVoted: true }
+    select: {  email: true, hasVoted: true, emailVerified: true, status: true }
   })
 
-  return NextResponse.json({ hasVoted: user?.hasVoted ?? false })
+  return NextResponse.json({
+    email: user?.email ?? '',
+    hasVoted: user?.hasVoted ?? false,
+    emailVerified: user?.emailVerified ?? false,
+    status: user?.status ?? 'Not Verified'
+  })
+
+  // return NextResponse.json(user);
 }

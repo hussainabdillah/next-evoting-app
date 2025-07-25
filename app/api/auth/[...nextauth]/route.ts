@@ -23,6 +23,11 @@ const handler = NextAuth({
         const isValid = await compare(credentials.password, user.password)
         if (!isValid) return null
 
+        // Check if the user is verified
+        if (!user.emailVerified) {
+          throw new Error('Please verify your email before logging in.');
+        }
+
         return {
           id: user.id,
           name: user.name as string,

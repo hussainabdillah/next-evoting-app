@@ -28,6 +28,8 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { MoreHorizontal, Pencil, Trash, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Breadcrumbs } from '@/components/breadcrumbs';
+import { CellAction } from '../cell-action';
 
 type Candidate = {
   id: number;
@@ -77,6 +79,11 @@ export default function CandidatesManagementPage() {
   // state file
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { title: 'Dashboard', link: '/admin' },
+    { title: 'Candidates Management', link: '/admin/candidates' },
+  ];
 
   // Fetch candidates from API
   useEffect(() => {
@@ -159,6 +166,17 @@ export default function CandidatesManagementPage() {
     }
   };
 
+  // Handler functions for CellAction
+  const handleEditCandidate = (candidate: Candidate) => {
+    setEditingCandidate(candidate);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteCandidateAction = (candidate: Candidate) => {
+    setDeletingCandidate(candidate);
+    setIsDeleteDialogOpen(true);
+  };
+
   const handleAddCandidate = async () => {
     if (!newCandidate.name || !newCandidate.party || !newCandidate.bio) {
       toast({
@@ -217,29 +235,36 @@ export default function CandidatesManagementPage() {
   
   return (
     <PageContainer scrollable={true}>
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="mx-auto max-w-7xl">
-          {/* Candidate Table */}
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-3xl font-bold">Manage Candidates</h1>
-            <Button
-              variant="outline"
-              size="sm" className="px-3"
-              onClick={() => setIsAddDialogOpen(true)}
-            >
-            <Plus className="w-4 h-4 mr-1" />
-            Add Candidate
-              </Button>
+      <div className="space-y-4">
+        <Breadcrumbs items={breadcrumbItems} />
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Candidates Management</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage candidates for the current election.
+            </p>
           </div>
-          <Card>
+        </div>
+        
+        <div className="flex justify-end">
+          <Button
+            variant="outline" 
+            className="ml-auto"
+            onClick={() => setIsAddDialogOpen(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Candidate
+          </Button>
+        </div>
+        <Card>
             <CardHeader>
-              <CardTitle>Candidates List</CardTitle>
+              {/* <CardTitle>Candidates List</CardTitle> */}
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="hidden md:table-cell">Image</TableHead>
+                    <TableHead>Image</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead className="hidden md:table-cell">Party</TableHead>
                     <TableHead>Actions</TableHead>
@@ -249,19 +274,18 @@ export default function CandidatesManagementPage() {
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, index) => (
                       <TableRow key={index}>
-                        <TableCell><Skeleton className="hidden md:table-cell w-[50px] h-[50px] rounded-full" /></TableCell>
+                        <TableCell><Skeleton className="w-[50px] h-[50px] rounded-full" /></TableCell>
                         <TableCell><Skeleton className="w-24 h-4" /></TableCell>
                         <TableCell><Skeleton className="hidden md:table-cell h-4 w-[80px]" /></TableCell>
-                        <TableCell className="flex gap-2">
-                          <Skeleton className="h-8 w-[60px]" />
-                          {/* <Skeleton className="h-8 w-[60px]" /> */}
+                        <TableCell>
+                          <Skeleton className="h-4 w-20" />
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     candidates.map((candidate) => (
                     <TableRow key={candidate.id}>
-                      <TableCell className="hidden md:table-cell">
+                      <TableCell>
                         <Image
                           src={candidate.image}
                           alt={candidate.name}
@@ -272,33 +296,12 @@ export default function CandidatesManagementPage() {
                       </TableCell>
                       <TableCell>{candidate.name}</TableCell>
                       <TableCell className="hidden md:table-cell">{candidate.party}</TableCell>
-                      <TableCell className="flex gap-2">
-                        {/* Edit Button */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="px-3"
-                          onClick={() => {
-                            setEditingCandidate(candidate);
-                            setIsEditDialogOpen(true);
-                          }}
-                        >
-                          <Pencil className="w-4 h-4 mr-1" />
-                          Edit
-                        </Button>
-                        {/* Delete Button */}
-                        <Button
-                          variant="destructive"
-                          size="sm" 
-                          className="px-3"
-                          onClick={() => {
-                            setDeletingCandidate(candidate);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash className="w-4 h-4 mr-1" />
-                          Delete
-                        </Button>
+                      <TableCell>
+                        <CellAction 
+                          data={candidate} 
+                          onEdit={handleEditCandidate}
+                          onDelete={handleDeleteCandidateAction}
+                        />
                       </TableCell>
                     </TableRow>
                   ))
@@ -498,8 +501,25 @@ export default function CandidatesManagementPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+      </div>
+      
+      {/* 
+      <main className="flex-1 p-8 overflow-auto">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold">Manage Candidates</h1>
+            <Button
+              variant="outline"
+              size="sm" className="px-3"
+              onClick={() => setIsAddDialogOpen(true)}
+            >
+            <Plus className="w-4 h-4 mr-1" />
+            Add Candidate
+              </Button>
+          </div>
         </div>
       </main>
+      */}
     </PageContainer>
   );
 }

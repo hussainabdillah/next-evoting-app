@@ -129,6 +129,12 @@ export const userNavItems: NavItem[] = [
     label: 'Dashboard'
   },
   {
+    title: 'Verification',
+    href: '/dashboard/verification',
+    icon: 'badgeCheck',
+    label: 'verification'
+  },
+  {
     title: 'Candidates',
     href: '/dashboard/candidates',
     icon: 'user',
@@ -145,6 +151,12 @@ export const userNavItems: NavItem[] = [
     href: '/dashboard/results',
     icon: 'result',
     label: 'results'
+  },
+  {
+    title: 'History',
+    href: '/dashboard/history',
+    icon: 'history',
+    label: 'history'
   }
 ];
 
